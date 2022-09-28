@@ -1,16 +1,17 @@
 import asyncio
 
+# Default parameters
 HOSTNAME = "localhost"  # ip: 127.0.0.1
 PORT = 8888  # arbitrary high level port
 
 
 class Server:
 
-    def __init__(self):
+    def __init__(self, hostname: str = HOSTNAME, port: int = PORT):
         self.connected_clients = []  # List for now, might need to change data structure
         self.database = None  # Placeholder for database
-        self.hostname = HOSTNAME
-        self.port = PORT
+        self.hostname = hostname
+        self.port = port
 
         # Async def makes the function a 'coroutine'
 
@@ -25,7 +26,7 @@ class Server:
         data = await reader.read(100)  # to run coroutines you need to call them using the 'await' keyword
         message = data.decode()  # Decoding message from bytestream to utf-8 encoded text
         addr = writer.get_extra_info("peername")
-        self.connected_clients.append(addr) # Add this client to list of currently connected clients
+        self.connected_clients.append(addr)  # Add this client to list of currently connected clients
 
         # TODO: change to use python logging module rather than print statements
         print(f"Received {message!r} from {addr!r}")
