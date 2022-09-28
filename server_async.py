@@ -37,6 +37,7 @@ async def parse_command(input: str):
     :param input:
     :return: action (future)
     """
+    pass
 
 
 async def main():
