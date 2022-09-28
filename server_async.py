@@ -4,10 +4,9 @@ HOSTNAME = "localhost"  # ip: 127.0.0.1
 PORT = 8888  # arbitrary high level port
 
 
-
 # Async def makes the function a 'coroutine'
 # basically a function that can be run using concurrency
-async def handle_client(reader, writer):
+async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     """
     Coroutine which handles incoming client connections parallel
     :param reader: asyncio.StreamReader - wrapper for async reading to TCP sockets
@@ -21,6 +20,9 @@ async def handle_client(reader, writer):
     # TODO: change to use python logging module rather than print statements
     print(f"Received {message!r} from {addr!r}")
     print(f"Send: {message!r}")
+
+    # Need to use write with drain as it might be queued in a write buffer
+    # if it cannot be sent immediately
     writer.write(data)
     await writer.drain()
 
@@ -28,10 +30,11 @@ async def handle_client(reader, writer):
     writer.close()
 
 
-async def parse_command(cmd):
+# Returns a callback
+async def parse_command(input: str):
     """
     Coroutine which parses client commands
-    :param cmd:
+    :param input:
     :return: action (future)
     """
 
@@ -48,4 +51,5 @@ async def main():
         await server.serve_forever()
 
 
-asyncio.run(main())
+# Remove debug=True when finished
+asyncio.run(main(), debug=True)
