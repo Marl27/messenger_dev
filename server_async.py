@@ -62,6 +62,24 @@ class Server:
             await server.serve_forever()
 
 
+    async def read_message(self, type):
+        """
+
+        :param type: single or multi
+        :return:
+        """
+        if type == "single":
+            pass
+        elif type == "multi":
+            pass
+
+    async def write_message(self, type, targets:(str), message:str):
+        if type == "single":
+            pass
+        elif type == "multi":
+            pass
+
+
 # Remove debug=True when finished
 server = Server()
 asyncio.run(server.main(), debug=True)
