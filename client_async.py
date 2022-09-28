@@ -36,7 +36,7 @@ class Client:
         await writer.wait_closed()
 
 
-num_clients = 500
+num_clients = 10
 clients = [Client(name=str(random.randint(0, 100))) for x in range(num_clients)]
 
 while True:

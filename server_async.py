@@ -23,14 +23,15 @@ class Server:
         :param writer: asyncio.StreamWriter - wrapper for async writing to TCP sockets
         :return:
         """
+        addr = writer.get_extra_info("peername")
+        print(f"Client {addr} connected.")
+        self.connected_clients.append(addr)  # Add this client to list of currently connected clients
         data = await reader.read(100)  # to run coroutines you need to call them using the 'await' keyword
         message = data.decode()  # Decoding message from bytestream to utf-8 encoded text
-        addr = writer.get_extra_info("peername")
-        self.connected_clients.append(addr)  # Add this client to list of currently connected clients
 
         # TODO: change to use python logging module rather than print statements
         print(f"Received {message!r} from {addr!r}")
-        print(f"Send: {message!r}")
+        # print(f"Send: {message!r}")
 
         # Need to use write with drain as it might be queued in a write buffer
         # if it cannot be sent immediately
