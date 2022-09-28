@@ -1,6 +1,7 @@
 import asyncio
 
-HOST
+HOST = "127.0.0.1"
+PORT = 8888
 
 async def tcp_echo_client(message):
         """
@@ -9,7 +10,10 @@ async def tcp_echo_client(message):
         :param message: String to send
         :return:
         """
-        reader, writer = await asyncio.open_connection("localhost", 8888)
+
+        # will change this to be command line input
+        # either in a run loop after starting client program or from command line
+        reader, writer = await asyncio.open_connection(HOST, PORT)
         print(f"Send: {message!r}")
         writer.write(message.encode())
         await writer.drain()
@@ -23,4 +27,4 @@ async def tcp_echo_client(message):
 
 # Not sure if this is the correct way to loop on asyncio but it works
 while True:
-    asyncio.run(tcp_echo_client(input(">")))
+    asyncio.run(tcp_echo_client(input(">")), debug=True)
