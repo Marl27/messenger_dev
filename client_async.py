@@ -8,10 +8,10 @@ PORT = 8888
 
 class Client:
 
-    def __init__(self, hostname: str = HOSTNAME, port: int = PORT, name:str = "default_client"):
+    def __init__(self, hostname: str = HOSTNAME, port: int = PORT, id:str = "default_client"):
         self.hostname = hostname
         self.port = port
-        self.name = name
+        self.name = id
 
     async def tcp_echo_client(self, message: str):
         """
@@ -37,7 +37,8 @@ class Client:
 
 
 num_clients = 10
-clients = [Client(name=str(random.randint(0, 100))) for x in range(num_clients)]
+# Creates 'num_clients' number of client objects with a random id number
+clients = [Client(id=str(random.randint(0, 100))) for x in range(num_clients)]
 
 while True:
     for client in clients:
