@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import sys
 
 # Default parameters
 HOSTNAME = "localhost"  # ip: 127.0.0.1
@@ -7,14 +9,16 @@ PORT = 8888  # arbitrary high level port
 
 class Server:
 
-    def __init__(self, hostname: str = HOSTNAME, port: int = PORT):
+    def __init__(self, hostname: str = HOSTNAME, port: int = PORT, logging_level: str = logging.WARN):
         self.connected_clients = []  # List for now, might need to change data structure
         self.database = None  # Placeholder for database
         self.hostname = hostname
         self.port = port
+        self.logger = logging.getLogger("Server_logger")
+        self.logger.setLevel(logging_level)
+        logging.basicConfig(stream=sys.stdout, level=logging_level)
 
-        # Async def makes the function a 'coroutine'
-
+    # Async def makes the function a 'coroutine'
     # basically a function that can be run using concurrency
     async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """
@@ -24,13 +28,13 @@ class Server:
         :return:
         """
         addr = writer.get_extra_info("peername")
-        print(f"Client {addr} connected.")
+        logging.info(f"Client {addr} connected.")
         self.connected_clients.append(addr)  # Add this client to list of currently connected clients
         data = await reader.read(100)  # to run coroutines you need to call them using the 'await' keyword
         message = data.decode()  # Decoding message from bytestream to utf-8 encoded text
 
         # TODO: change to use python logging module rather than print statements
-        print(f"Received {message!r} from {addr!r}")
+        logging.info(f"Received {message!r} from {addr!r}")
         # print(f"Send: {message!r}")
 
         # Need to use write with drain as it might be queued in a write buffer
@@ -56,11 +60,10 @@ class Server:
         server = await asyncio.start_server(self.handle_client, self.hostname, self.port)
 
         addrs = ', '.join(str(sock.getsockname()) for sock in server.sockets)
-        print(f"Serving on {addrs}")
+        logging.info(f"Serving on {addrs}")
 
         async with server:
             await server.serve_forever()
-
 
     async def read_message(self, type):
         """
@@ -73,7 +76,7 @@ class Server:
         elif type == "multi":
             pass
 
-    async def write_message(self, type, targets:(str), message:str):
+    async def write_message(self, type, targets: (str), message: str):
         if type == "single":
             pass
         elif type == "multi":
@@ -81,5 +84,5 @@ class Server:
 
 
 # Remove debug=True when finished
-server = Server()
+server = Server(logging_level=logging.INFO)
 asyncio.run(server.main(), debug=True)
