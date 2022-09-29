@@ -55,6 +55,10 @@ class Server:
         pass
 
     async def main(self):
+        """
+        Entry point for server code
+        :return:
+        """
         # asyncio makes it easy to start tcp servers using start_server
         # It's already both IPv4 and IPv6
         server = await asyncio.start_server(self.handle_client, self.hostname, self.port)
