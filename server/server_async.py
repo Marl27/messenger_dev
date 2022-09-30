@@ -33,7 +33,6 @@ class Server:
         data = await reader.read(100)  # to run coroutines you need to call them using the 'await' keyword
         message = data.decode()  # Decoding message from bytestream to utf-8 encoded text
 
-        # TODO: change to use python logging module rather than print statements
         logging.info(f"Received {message!r} from {addr!r}")
         # print(f"Send: {message!r}")
 
