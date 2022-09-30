@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import json
 
 # Default parameters
 HOSTNAME = "localhost"  # ip: 127.0.0.1
@@ -32,7 +33,7 @@ class Server:
         self.connected_clients.append(addr)  # Add this client to list of currently connected clients
         data = await reader.read(100)  # to run coroutines you need to call them using the 'await' keyword
         message = data.decode()  # Decoding message from bytestream to utf-8 encoded text
-
+        request = await self.parse_request(json.loads(message))
         logging.info(f"Received {message!r} from {addr!r}")
         # print(f"Send: {message!r}")
 
@@ -45,13 +46,24 @@ class Server:
         writer.close()
 
     # Returns a callback
-    async def parse_command(self, input: str):
+    async def parse_request(self, request: dict):
         """
-        Coroutine which parses client commands
-        :param input:
-        :return: action (future)
+        Coroutine which parses client requests.
+        The requests will be in json format
+        :param request: json format of request
+        :return callback: action (future)
         """
-        pass
+        match request["code"]:
+            case "READ":
+                self.logger.debug(f"READ request from {request['fro']}")
+            case "WRITE":
+                self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
+            case "LOGIN":
+                pass
+            case "LOGOUT":
+                pass
+            case "REGISTER":
+                pass
 
     async def main(self):
         """
@@ -97,5 +109,5 @@ class Server:
 
 
 # Remove debug=True when finished
-server = Server(logging_level=logging.INFO)
+server = Server(logging_level=logging.DEBUG)
 asyncio.run(server.main(), debug=True)
