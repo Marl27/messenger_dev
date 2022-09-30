@@ -2,6 +2,7 @@ import enum
 
 
 class Protocol(enum.Enum):
+    # Function codes
     LOGOUT = 0
     LOGIN = 1
     REGISTER = 2
@@ -10,12 +11,12 @@ class Protocol(enum.Enum):
     LIST = 5
 
     @staticmethod
-    def build_request(request_type: 'Protocol', to: str = "", sender: str = "", payload: str = ""):
+    def build_request(request_type: 'Protocol', to: str = "", from_other: str = "", payload: str = ""):
         """
         Static method to
         :param request_type: header for function code (see protocol class)
         :param to: username
-        :param sender: username
+        :param from_other: username
         :param payload: string message
         :return packet: json representation of packet
         """
@@ -28,7 +29,27 @@ class Protocol(enum.Enum):
             case Protocol.REGISTER:
                 pass
             case Protocol.READ:
-                packet = {"code": "READ", "sender": sender}
+                # 1 = charlie
+                # 2 = himalya
+                # 3 = Random
+                packet = {"code": "READ", "from_other": from_other}
             case Protocol.WRITE:
                 packet = {"code": "WRITE", "to": to, "payload": payload}
         return packet
+
+"""
+Header fields:
+
+code:   READ
+        WRITE
+        LOGIN
+        LOGOUT
+        REGISTER
+        
+read packet:
+    from_other
+    
+write packet:
+    to
+    payload (utf-8 message)
+"""
