@@ -54,11 +54,16 @@ elif len(sys.argv) == 4:
 print("Functions: login, register, read, write")
 if sys.argv[3] == "read":
     function = "read"
-    message = Protocol.build_request(Protocol.READ, to="", fro="", payload="")
-    message2 = Protocol.build_request(Protocol.WRITE, to="", fro="", payload="TEST MESSAGE 0XDEADBEEF")
+    fro = input("Read from whom? >")
+    message = Protocol.build_request(Protocol.READ, fro=fro)
+
+elif sys.argv[3] == "write":
+    function = "write"
+    to = input("Write to whom? >")
+    message = input("Enter message >")
+    message = Protocol.build_request(Protocol.WRITE, to=to, payload=message)
 
 asyncio.run(client.tcp_echo_client(message), debug=True)
-asyncio.run(client.tcp_echo_client(message2), debug=True)
 
 # num_clients = 10
 # # Creates 'num_clients' number of client objects with a random id number
