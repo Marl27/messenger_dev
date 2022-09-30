@@ -10,7 +10,7 @@ class Protocol(enum.Enum):
     LIST = 5
 
     @staticmethod
-    def build_request(request_type: 'Protocol', to: str, fro: str, payload: str):
+    def build_request(request_type: 'Protocol', to: str = "", fro: str = "", payload: str = ""):
         """
         Static method to
         :param request_type: header for function code (see protocol class)
