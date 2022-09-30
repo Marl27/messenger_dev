@@ -55,8 +55,8 @@ class Server:
         """
         match request["code"]:
             case "READ":
-                self.logger.debug(f"READ request from {request['sender']}")
-                pass #
+                self.logger.debug(f"READ request from {request['from_other']}")
+                pass # Call dbms method here
             case "WRITE":
                 self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
             case "LOGIN":
