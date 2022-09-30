@@ -3,6 +3,8 @@ import logging
 import sys
 import json
 
+import database.read
+
 # Default parameters
 HOSTNAME = "localhost"  # ip: 127.0.0.1
 PORT = 8888  # arbitrary high level port
@@ -56,7 +58,7 @@ class Server:
         match request["code"]:
             case "READ":
                 self.logger.debug(f"READ request from {request['from_other']}")
-                pass # Call dbms method here
+                return database.read.fetch_chat(request["from_other"])
             case "WRITE":
                 self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
             case "LOGIN":
