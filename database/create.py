@@ -1,9 +1,8 @@
 from database_connect import db_connect
 
-conn = db_connect()
-
 
 def create_table():
+    conn = db_connect()
     cursor = conn.cursor()
     try:
         cursor.executescript("""
@@ -19,7 +18,7 @@ def create_table():
           created_at timestamp DEFAULT CURRENT_TIMESTAMP,
           updated_at timestamp DEFAULT CURRENT_TIMESTAMP,
           UNIQUE (first_name, username, start_date)
-        )  
+        );  
 
         CREATE TABLE IF NOT EXISTS messenger(
             sender int NOT NULL,
@@ -29,7 +28,7 @@ def create_table():
             message TEXT NOT NULL,
             stared BOOLEAN,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
+        );
         """)
     except conn.DatabaseError:
         conn.rollback()
