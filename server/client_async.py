@@ -55,7 +55,7 @@ print("Functions: login, register, read, write")
 if sys.argv[3] == "read":
     function = "read"
     fro = input("Read from whom? >")
-    message = Protocol.build_request(Protocol.READ, fro=fro)
+    message = Protocol.build_request(Protocol.READ, sender=fro)
 
 elif sys.argv[3] == "write":
     function = "write"

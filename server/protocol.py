@@ -10,12 +10,12 @@ class Protocol(enum.Enum):
     LIST = 5
 
     @staticmethod
-    def build_request(request_type: 'Protocol', to: str = "", fro: str = "", payload: str = ""):
+    def build_request(request_type: 'Protocol', to: str = "", sender: str = "", payload: str = ""):
         """
         Static method to
         :param request_type: header for function code (see protocol class)
         :param to: username
-        :param fro: username
+        :param sender: username
         :param payload: string message
         :return packet: json representation of packet
         """
@@ -28,7 +28,7 @@ class Protocol(enum.Enum):
             case Protocol.REGISTER:
                 pass
             case Protocol.READ:
-                packet = {"code": "READ", "fro": fro}
+                packet = {"code": "READ", "sender": sender}
             case Protocol.WRITE:
                 packet = {"code": "WRITE", "to": to, "payload": payload}
         return packet
