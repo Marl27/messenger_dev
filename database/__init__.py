@@ -1,2 +1,2 @@
-from create import create_table
+from database.create import create_table
 create_table()

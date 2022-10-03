@@ -83,33 +83,6 @@ class Server:
         async with server:
             await server.serve_forever()
 
-    async def read_message(self, type: str, targets: (str)):
-        """
-        Stub for message reading coroutine
-        This will eventually call the dbms methods to query the database
-        :param type: single or multi read
-        :param: targets: who to read from
-        :return:
-        """
-        if type == "single":
-            pass
-        elif type == "multi":
-            pass
-
-    async def write_message(self, type: str, targets: (str), message: str):
-        """
-        Stub for message reading coroutine
-        This will eventually call the dbms methods to query the database
-        :param type: single or multi write
-        :param targets: str tuple of targets for writing
-        :param message: The message to write
-        :return:
-        """
-        if type == "single":
-            pass
-        elif type == "multi":
-            pass
-
 
 # Remove debug=True when finished
 server = Server(logging_level=logging.DEBUG)
