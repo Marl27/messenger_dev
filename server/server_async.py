@@ -75,13 +75,10 @@ class Server:
             case "LOGIN":
                 self.logger.debug(f"LOGIN request ")
                 return protocol.Protocol.LOGIN, []
-                pass
             case "LOGOUT":
                 return protocol.Protocol.LOGOUT, []
-                pass
             case "REGISTER":
                 return protocol.Protocol.REGISTER, []
-                pass
 
     async def main(self):
         """
