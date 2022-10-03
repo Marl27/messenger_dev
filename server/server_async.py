@@ -2,8 +2,8 @@ import asyncio
 import logging
 import sys
 import json
+from database.read import fetch_chat
 
-import database.read
 
 # Default parameters
 HOSTNAME = "localhost"  # ip: 127.0.0.1
@@ -58,7 +58,7 @@ class Server:
         match request["code"]:
             case "READ":
                 self.logger.debug(f"READ request from {request['from_other']}")
-                return database.read.fetch_chat(request["from_other"])
+                return fetch_chat(request["from_other"])
             case "WRITE":
                 self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
             case "LOGIN":
@@ -84,6 +84,3 @@ class Server:
             await server.serve_forever()
 
 
-# Remove debug=True when finished
-server = Server(logging_level=logging.DEBUG)
-asyncio.run(server.main(), debug=True)
