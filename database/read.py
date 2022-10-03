@@ -17,7 +17,7 @@ def fetch_chat(user_id):
     if len(user) > 1:
         print('group chat')
     else:
-        print(private_window(user[0]))
+        return private_window(user[0])
 
 
 

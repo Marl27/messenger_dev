@@ -30,15 +30,16 @@ class Client:
         writer.write(bytes(json.dumps(message), encoding="utf-8"))
         await writer.drain()
 
-        data = await reader.read(100)
+        data = await reader.read(1024)
         print(f"Received: {data.decode()!r}")
 
         print("Close the connection")
         writer.close()
         await writer.wait_closed()
 
+
 client = None
-function = ""
+
 message = ""
 # Not enough arguments
 if len(sys.argv) != 4:
@@ -51,12 +52,12 @@ elif len(sys.argv) == 4:
 
 print("Functions: login, register, read, write")
 if sys.argv[3] == "read":
-    function = "read"
-    fro = input("Read from whom? >")
-    message = Protocol.build_request(Protocol.READ, from_other=fro)
+    uid = input("Enter your user id> ")
+    fro = input("Read from whom? > ")
+    message = Protocol.build_request(Protocol.READ, from_other=fro, to=uid)
 
 elif sys.argv[3] == "write":
-    function = "write"
+
     to = input("Write to whom? >")
     message = input("Enter message >")
     message = Protocol.build_request(Protocol.WRITE, to=to, payload=message)
