@@ -1,4 +1,5 @@
-from database_connect import db_connect
+from .database_connect import db_connect
+
 
 
 def create_table():

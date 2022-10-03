@@ -3,6 +3,6 @@
 
 #virtual Environment
 .venv
-
+*.pyc
 #database
-sqlite.db
+#sqlite.db
