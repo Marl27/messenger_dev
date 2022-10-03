@@ -27,10 +27,13 @@ class Client:
         print(f"self.hostname = {self.hostname}, self.port = {self.port}")
         reader, writer = await asyncio.open_connection(self.hostname, self.port)
         print(f"Send request: {message!r}")
+        # request = json.dumps(message, encoding="utf-8") +
         writer.write(bytes(json.dumps(message), encoding="utf-8"))
         await writer.drain()
+        writer.write_eof()
+        await writer.drain()
 
-        data = await reader.read(1024)
+        data = await reader.read(-1)
         print(f"Received: {data.decode()!r}")
 
         print("Close the connection")
@@ -39,6 +42,14 @@ class Client:
 
 
 client = None
+
+TEST_PACKET = {
+    "code": "LOGIN",
+    "direction": Protocol.REQUEST.value,
+    "to": "Cruthe93",
+    "message": 0xDEADBEEF,
+    "testval": [x for x in range(10000)]
+}
 
 message = ""
 # Not enough arguments
@@ -61,6 +72,10 @@ elif sys.argv[3] == "write":
     to = input("Write to whom? >")
     message = input("Enter message >")
     message = Protocol.build_request(Protocol.WRITE, to=to, payload=message)
+
+elif sys.argv[
+    3] == "test":
+    message = TEST_PACKET
 
 asyncio.run(client.tcp_echo_client(message), debug=True)
 

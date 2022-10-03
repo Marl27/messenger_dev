@@ -40,7 +40,7 @@ class Protocol(enum.Enum):
         return packet
 
     @staticmethod
-    def build_response(response_type: 'Protocol', db_response: [(str)]):
+    async def build_response(response_type: 'Protocol', db_response: [(str)]):
         """
         TODO: Change to handle multiple database row responses
         :param response_type:

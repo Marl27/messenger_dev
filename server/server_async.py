@@ -5,10 +5,8 @@ import json
 from database.read import fetch_chat
 from server import protocol
 
-import database.database_connect
-
 # Default parameters
-HOSTNAME = "0.0.0.0" # Should bind on all interfaces
+HOSTNAME = "localhost"  # Should bind on all interfaces
 PORT = 8888  # arbitrary high level port
 
 
@@ -36,7 +34,8 @@ class Server:
         logging.info(f"Client {addr} connected.")
         self.connected_clients.append(addr)  # Add this client to list of currently connected clients
         # Need to make sure message isn't truncated (1024 bytes max) and then we can't deserialise it
-        data = await reader.read(1024)  # to run coroutines you need to call them using the 'await' keyword
+
+        data = await reader.read()  # to run coroutines you need to call them using the 'await' keyword
         message = data.decode()  # Decoding message from bytestream to utf-8 encoded text
 
         # this is generic, so to decide what kind of data will be returned from db
@@ -45,11 +44,13 @@ class Server:
         request_type, db_response = await self.parse_request(json.loads(message))
         logging.info(f"Received {message!r} from {addr!r}")
 
-        response = protocol.Protocol.build_response(request_type, db_response)
+        response = await protocol.Protocol.build_response(request_type, db_response)
         logging.info(f"Response message: {response}")
         # Need to use write with drain as it might be queued in a write buffer
         # if it cannot be sent immediately
         writer.write(bytes(json.dumps(response), encoding="utf-8"))
+        await writer.drain()
+        writer.write_eof()
         await writer.drain()
 
         # This method closes the stream AND the underlying socket
@@ -67,16 +68,19 @@ class Server:
         match request["code"]:
             case "READ":
                 self.logger.debug(f"READ request from {request['from_other']}")
-                return protocol.Protocol.READ, read(request)
+                return protocol.Protocol.READ, self.read(request)
             case "WRITE":
                 self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
-                pass
+                return protocol.Protocol.WRITE, []
             case "LOGIN":
                 self.logger.debug(f"LOGIN request ")
+                return protocol.Protocol.LOGIN, []
                 pass
             case "LOGOUT":
+                return protocol.Protocol.LOGOUT, []
                 pass
             case "REGISTER":
+                return protocol.Protocol.REGISTER, []
                 pass
 
     async def main(self):
@@ -94,7 +98,6 @@ class Server:
         async with server:
             await server.serve_forever()
 
+    def read(self, request):
+        return fetch_chat(request["from_other"])
 
-def read(request):
-    # This also needs to encode the fact that it's a single read
-    return fetch_chat(request["from_other"])
