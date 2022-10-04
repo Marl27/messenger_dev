@@ -2,6 +2,9 @@ import enum
 
 
 class Protocol(enum.Enum):
+    """
+    This class defines our application-layer protocol for client-server communication
+    """
     # Function codes
     LOGOUT = 0
     LOGIN = 1
@@ -15,7 +18,7 @@ class Protocol(enum.Enum):
     @staticmethod
     def build_request(request_type: 'Protocol', to: str = "", from_other: str = "", payload: str = ""):
         """
-        Static method to
+        Static method to build a request packet.
         :param request_type: header for function code (see protocol class)
         :param to: username
         :param from_other: username
@@ -25,7 +28,7 @@ class Protocol(enum.Enum):
         packet = {}  # Empty packet
         match request_type:
             case Protocol.LOGOUT:
-                pass
+                packet = {"code":"LOGOUT"}
             case Protocol.LOGIN:
                 pass
             case Protocol.REGISTER:
@@ -40,19 +43,24 @@ class Protocol(enum.Enum):
         return packet
 
     @staticmethod
-    async def build_response(response_type: 'Protocol', db_response: [(str)]):
+    async def build_response(response_type: 'Protocol', db_response: [(str)]) -> dict:
         """
-        TODO: Change to handle multiple database row responses
-        :param response_type:
-        :param db_response:
-        :return:
+        Static method to build a response packet. Takes a response code and builds appropriate packet
+        using the response from the database.
+
+        :param response_type: Can be one of: Protocol.LOGIN, Protocol.LOGOUT, Protocol.REGISTER, Protocol.READ, Protocol.WRITE
+        :param db_response: - list of tuples (rows) from the database
+        :return packet: dict - json representation of the packet
         """
         packet = {}  # Empty packet
         match response_type:
             case Protocol.LOGOUT:
-                pass
+                packet = {"code": "LOGOUT",
+                          "direction" : Protocol.RESPONSE.value,
+                          "message": "goodbye"}
+
             case Protocol.LOGIN:
-                pass
+                packet = {"code" : "LOGIN"}
             case Protocol.REGISTER:
                 pass
             case Protocol.READ:
@@ -71,6 +79,30 @@ class Protocol(enum.Enum):
             case Protocol.WRITE:
                 packet = {"code": "WRITE", "direction": Protocol.REQUEST.value, }
         return packet
+
+    @staticmethod
+    async def write_message(octets, writer):
+        """
+        Helper method which prepends writes length of outgoing message first.
+        :param octets: str - The message to send
+        :param writer: asyncio.StreamWriter - The stream writer object
+        :return:
+        """
+        writer.write(b"%d\n" % len(octets))
+        writer.write(octets)
+        await writer.drain()
+
+    @staticmethod
+    async def read_message(reader):
+        """
+        Helper method which first reads the length of the incoming message
+        then reads the exact number of bytes.
+        :param reader: asyncio.StreamReader - the reader object
+        :return:
+        """
+        prefix = await reader.readline()
+        msg_len = int(prefix)
+        return await reader.readexactly(msg_len)
 
 
 """

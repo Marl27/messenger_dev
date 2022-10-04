@@ -1,7 +1,7 @@
 import asyncio
 import json
 import sys
-from protocol import Protocol
+from server.protocol import Protocol
 
 HOSTNAME = "127.0.0.1"
 PORT = 8888
@@ -30,13 +30,48 @@ class Client:
         # request = json.dumps(message, encoding="utf-8") +
         writer.write(bytes(json.dumps(message), encoding="utf-8"))
         await writer.drain()
-        writer.write_eof()
-        await writer.drain()
 
         data = await reader.read(-1)
         print(f"Received: {data.decode()!r}")
 
         print("Close the connection")
+        writer.close()
+        await writer.wait_closed()
+
+    async def tcp_session_client(self):
+        reader, writer = await asyncio.open_connection(self.hostname, self.port)
+        print(f"Connected to server on {self.hostname}:{self.port}")
+        print(f"Commands: read, write, test, quit")
+        logout = False
+        while not logout:
+            message = {}
+            command = input("> ")
+            if command == "read":
+                uid = input("Enter your user id> ")
+                fro = input("Read from whom? > ")
+                message = Protocol.build_request(Protocol.READ, from_other=fro, to=uid)
+
+            elif command == "write":
+                to = input("Write to whom? >")
+                message = input("Enter message >")
+                message = Protocol.build_request(Protocol.WRITE, to=to, payload=message)
+
+            elif command == "test":
+                message = TEST_PACKET
+
+            elif command == "help":
+                print(helpstring)
+                continue
+
+            elif command == "quit":
+                message = Protocol.build_request(Protocol.LOGOUT)
+                logout = True
+
+            await Protocol.write_message(json.dumps(message).encode("utf-8"), writer)
+            server_response = await Protocol.read_message(reader)
+            server_response = json.loads(server_response.decode("utf-8"))
+            print(f"Server response: {server_response}")
+
         writer.close()
         await writer.wait_closed()
 
@@ -51,33 +86,34 @@ TEST_PACKET = {
     "testval": [x for x in range(10000)]
 }
 
+helpstring = "Commands: read, write, test, help, quit"
+
 message = ""
 # Not enough arguments
-if len(sys.argv) != 4:
-    print("Usage: client_async.py host port function")
-    print("Functions: login, register, read, write")
-    exit(1)
-
-elif len(sys.argv) == 4:
-    client = Client(id="Prototype", hostname=sys.argv[1], port=int(sys.argv[2]))
-
-print("Functions: login, register, read, write")
-if sys.argv[3] == "read":
-    uid = input("Enter your user id> ")
-    fro = input("Read from whom? > ")
-    message = Protocol.build_request(Protocol.READ, from_other=fro, to=uid)
-
-elif sys.argv[3] == "write":
-
-    to = input("Write to whom? >")
-    message = input("Enter message >")
-    message = Protocol.build_request(Protocol.WRITE, to=to, payload=message)
-
-elif sys.argv[
-    3] == "test":
-    message = TEST_PACKET
-
-asyncio.run(client.tcp_echo_client(message), debug=True)
+# if len(sys.argv) != 4:
+#     print("Usage: client_async.py host port function")
+#     print("Functions: login, register, read, write")
+#     exit(1)
+#
+# elif len(sys.argv) == 4:
+#     client = Client(id="Prototype", hostname=sys.argv[1], port=int(sys.argv[2]))
+#
+# print("Functions: login, register, read, write")
+# if sys.argv[3] == "read":
+#     uid = input("Enter your user id> ")
+#     fro = input("Read from whom? > ")
+#     message = Protocol.build_request(Protocol.READ, from_other=fro, to=uid)
+#
+# elif sys.argv[3] == "write":
+#
+#     to = input("Write to whom? >")
+#     message = input("Enter message >")
+#     message = Protocol.build_request(Protocol.WRITE, to=to, payload=message)
+#
+# elif sys.argv[3] == "test":
+#     message = TEST_PACKET
+client = Client()
+asyncio.run(client.tcp_session_client(), debug=True)
 
 # num_clients = 10
 # # Creates 'num_clients' number of client objects with a random id number
