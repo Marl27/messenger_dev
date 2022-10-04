@@ -50,7 +50,9 @@ class Protocol(enum.Enum):
         packet = {}  # Empty packet
         match response_type:
             case Protocol.LOGOUT:
-                pass
+                packet = {"code": "LOGOUT",
+                          "message": "goodbye"}
+
             case Protocol.LOGIN:
                 pass
             case Protocol.REGISTER:
@@ -95,6 +97,7 @@ class Protocol(enum.Enum):
         prefix = await reader.readline()
         msg_len = int(prefix)
         return await reader.readexactly(msg_len)
+
 
 """
 Header fields:

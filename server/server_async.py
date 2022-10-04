@@ -3,7 +3,7 @@ import logging
 import sys
 import json
 from database.read import fetch_chat
-from server import protocol
+from server.protocol import Protocol
 
 # Default parameters
 HOSTNAME = "localhost"  # Should bind on all interfaces
@@ -34,27 +34,30 @@ class Server:
         logging.info(f"Client {addr} connected.")
         self.connected_clients.append(addr)  # Add this client to list of currently connected clients
         # Need to make sure message isn't truncated (1024 bytes max) and then we can't deserialise it
+        logout = False
+        while not logout:
+            data = await Protocol.read_message(
+                reader)  # to run coroutines you need to call them using the 'await' keyword
+            message = json.loads(data.decode())  # Decoding message from bytestream to utf-8 encoded text to json (dict)
 
-        data = await reader.read()  # to run coroutines you need to call them using the 'await' keyword
-        message = data.decode()  # Decoding message from bytestream to utf-8 encoded text
+            # this is generic, so to decide what kind of data will be returned from db
+            # we need additional info i.e. what the "code" value is, but that's
+            # the whole purpose of parse_request...
+            request_type, db_response = await self.parse_request(message)
+            logging.info(f"Received {message!r} from {addr!r}")
 
-        # this is generic, so to decide what kind of data will be returned from db
-        # we need additional info i.e. what the "code" value is, but that's
-        # the whole purpose of parse_request...
-        request_type, db_response = await self.parse_request(json.loads(message))
-        logging.info(f"Received {message!r} from {addr!r}")
-
-        response = await protocol.Protocol.build_response(request_type, db_response)
-        logging.info(f"Response message: {response}")
-        # Need to use write with drain as it might be queued in a write buffer
-        # if it cannot be sent immediately
-        writer.write(bytes(json.dumps(response), encoding="utf-8"))
-        await writer.drain()
-        writer.write_eof()
-        await writer.drain()
+            response = await Protocol.build_response(request_type, db_response)
+            logging.info(f"Response message: {response}")
+            # Need to use write with drain as it might be queued in a write buffer
+            # if it cannot be sent immediately
+            if response["code"] == "LOGOUT":
+                logout = True
+            response = json.dumps(response).encode("utf-8")
+            await Protocol.write_message(response, writer)
 
         # This method closes the stream AND the underlying socket
         writer.close()
+        await writer.wait_closed()
 
     # Returns a callback
     async def parse_request(self, request: dict):
@@ -68,17 +71,17 @@ class Server:
         match request["code"]:
             case "READ":
                 self.logger.debug(f"READ request from {request['from_other']}")
-                return protocol.Protocol.READ, self.read(request)
+                return Protocol.READ, Server.read_from_db(request)
             case "WRITE":
                 self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
-                return protocol.Protocol.WRITE, []
+                return Protocol.WRITE, []
             case "LOGIN":
                 self.logger.debug(f"LOGIN request ")
-                return protocol.Protocol.LOGIN, []
+                return Protocol.LOGIN, []
             case "LOGOUT":
-                return protocol.Protocol.LOGOUT, []
+                return Protocol.LOGOUT, []
             case "REGISTER":
-                return protocol.Protocol.REGISTER, []
+                return Protocol.REGISTER, []
 
     async def main(self):
         """
@@ -95,6 +98,6 @@ class Server:
         async with server:
             await server.serve_forever()
 
-    def read(self, request):
+    @staticmethod
+    def read_from_db(request):
         return fetch_chat(request["from_other"])
-
