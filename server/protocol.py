@@ -83,22 +83,26 @@ class Protocol(enum.Enum):
     @staticmethod
     async def write_message(octets, writer):
         """
-        Helper method which prepends writes length of outgoing message first.
+        Helper coroutine which prepends writes length of outgoing message first.
+
         :param octets: str - The message to send
         :param writer: asyncio.StreamWriter - The stream writer object
         :return:
         """
         writer.write(b"%d\n" % len(octets))
         writer.write(octets)
+        # Need to use write with drain as it might be queued in a write buffer
+        # if it cannot be sent immediately
         await writer.drain()
 
     @staticmethod
     async def read_message(reader):
         """
-        Helper method which first reads the length of the incoming message
+        Helper coroutine which first reads the length of the incoming message
         then reads the exact number of bytes.
+
         :param reader: asyncio.StreamReader - the reader object
-        :return:
+        :return future:
         """
         prefix = await reader.readline()
         msg_len = int(prefix)
