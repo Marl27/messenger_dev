@@ -36,6 +36,12 @@ class Server:
         # Need to make sure message isn't truncated (1024 bytes max) and then we can't deserialise it
         logout = False
         while not logout:
+            #reinitialise variables
+
+            data = None
+            message = {}
+            response = {}
+
             data = await Protocol.read_message(
                 reader)  # to run coroutines you need to call them using the 'await' keyword
             message = json.loads(data.decode())  # Decoding message from bytestream to utf-8 encoded text to json (dict)
