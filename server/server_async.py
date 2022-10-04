@@ -4,16 +4,15 @@ import sys
 import json
 from database.read import fetch_chat
 from server.protocol import Protocol
-#from main import HOSTNAME, PORT
 
 # Default parameters
-# HOSTNAME = HOSTNAME  # Should bind on all interfaces
-# PORT = PORT  # arbitrary high level port
+HOSTNAME = "localhost"  # Should bind on all interfaces
+PORT = 8888  # arbitrary high level port
 
 
 class Server:
 
-    def __init__(self, hostname: str, port: int, logging_level: str = logging.WARN):
+    def __init__(self, hostname: str = HOSTNAME, port: int = PORT, logging_level: str = logging.WARN):
         self.connected_clients = []  # List for now, might need to change data structure
         self.database = None  # Placeholder for database
         self.hostname = hostname
