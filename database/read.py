@@ -1,6 +1,11 @@
 from .database_connect import db_connect
-# from database_connect import db_connect
+#from database_connect import db_connect
 
+import dotenv
+import os
+dotenv.load_dotenv()
+
+print('SQL QUERY - ', os.getenv("private_window_query"))
 
 def private_window(receiver):
     conn = db_connect().cursor()
