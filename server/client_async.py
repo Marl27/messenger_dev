@@ -3,13 +3,13 @@ import json
 import sys
 from server.protocol import Protocol
 
-HOSTNAME = "127.0.0.1"
-PORT = 8888
+# HOSTNAME = "127.0.0.1"
+# PORT = 8888
 
 
 class Client:
 
-    def __init__(self, hostname: str = HOSTNAME, port: int = PORT, id: str = "default_client"):
+    def __init__(self, hostname: str, port: int, id: str = "default_client"):
         self.hostname = hostname
         self.port = port
         self.name = id
