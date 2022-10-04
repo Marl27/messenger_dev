@@ -72,6 +72,29 @@ class Protocol(enum.Enum):
                 packet = {"code": "WRITE", "direction": Protocol.REQUEST.value, }
         return packet
 
+    @staticmethod
+    async def write_message(octets, writer):
+        """
+        Helper method which prepends writes length of outgoing message first.
+        :param octets: str - The message to send
+        :param writer: asyncio.StreamWriter - The stream writer object
+        :return:
+        """
+        writer.write(b"%d\n" % len(octets))
+        writer.write(octets)
+        await writer.drain()
+
+    @staticmethod
+    async def read_message(reader):
+        """
+        Helper method which first reads the length of the incoming message
+        then reads the exact number of bytes.
+        :param reader: asyncio.StreamReader - the reader object
+        :return:
+        """
+        prefix = await reader.readline()
+        msg_len = int(prefix)
+        return await reader.readexactly(msg_len)
 
 """
 Header fields:
