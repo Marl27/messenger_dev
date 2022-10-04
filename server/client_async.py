@@ -66,6 +66,7 @@ class Client:
             elif command == "quit":
                 message = Protocol.build_request(Protocol.LOGOUT)
                 logout = True
+
             await Protocol.write_message(json.dumps(message).encode("utf-8"), writer)
             server_response = await Protocol.read_message(reader)
             server_response = json.loads(server_response.decode("utf-8"))
@@ -73,6 +74,7 @@ class Client:
 
         writer.close()
         await writer.wait_closed()
+
 
 client = None
 

@@ -25,7 +25,8 @@ class Server:
     # basically a function that can be run using concurrency
     async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """
-        Coroutine which handles incoming client connections parallel
+        Coroutine which handles incoming client sessions in parallel
+
         :param reader: asyncio.StreamReader - wrapper for async reading to TCP sockets
         :param writer: asyncio.StreamWriter - wrapper for async writing to TCP sockets
         :return:
@@ -36,7 +37,7 @@ class Server:
         # Need to make sure message isn't truncated (1024 bytes max) and then we can't deserialise it
         logout = False
         while not logout:
-            #reinitialise variables
+            # reinitialise variables
 
             data = None
             message = {}
@@ -65,12 +66,13 @@ class Server:
         writer.close()
         await writer.wait_closed()
 
-    # Returns a callback
+
     async def parse_request(self, request: dict):
         """
         Coroutine which parses client requests.
         The requests will be in json format
         NOTE this will need to be expanded to handle multiple requests in the one json file
+
         :param request: json format of request
         :return (Protocol type Enum, [database response]): Returns a tuple with the function code and relevant data from database
         """
