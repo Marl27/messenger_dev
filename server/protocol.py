@@ -25,7 +25,7 @@ class Protocol(enum.Enum):
         packet = {}  # Empty packet
         match request_type:
             case Protocol.LOGOUT:
-                pass
+                packet = {"code":"LOGOUT"}
             case Protocol.LOGIN:
                 pass
             case Protocol.REGISTER:
