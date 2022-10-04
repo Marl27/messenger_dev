@@ -36,7 +36,7 @@ def fetch_chat(user_id):
         print('group chat')
         group_window(user)
     else:
-        print(private_window(user[0]))
+        return private_window(user[0])
 
 
 

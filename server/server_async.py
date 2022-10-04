@@ -3,10 +3,10 @@ import logging
 import sys
 import json
 from database.read import fetch_chat
-
+from server import protocol
 
 # Default parameters
-HOSTNAME = "localhost"  # ip: 127.0.0.1
+HOSTNAME = "localhost"  # Should bind on all interfaces
 PORT = 8888  # arbitrary high level port
 
 
@@ -33,18 +33,27 @@ class Server:
         addr = writer.get_extra_info("peername")
         logging.info(f"Client {addr} connected.")
         self.connected_clients.append(addr)  # Add this client to list of currently connected clients
-        data = await reader.read(100)  # to run coroutines you need to call them using the 'await' keyword
-        message = data.decode()  # Decoding message from bytestream to utf-8 encoded text
-        request = await self.parse_request(json.loads(message))
-        logging.info(f"Received {message!r} from {addr!r}")
-        # print(f"Send: {message!r}")
+        # Need to make sure message isn't truncated (1024 bytes max) and then we can't deserialise it
 
+        data = await reader.read()  # to run coroutines you need to call them using the 'await' keyword
+        message = data.decode()  # Decoding message from bytestream to utf-8 encoded text
+
+        # this is generic, so to decide what kind of data will be returned from db
+        # we need additional info i.e. what the "code" value is, but that's
+        # the whole purpose of parse_request...
+        request_type, db_response = await self.parse_request(json.loads(message))
+        logging.info(f"Received {message!r} from {addr!r}")
+
+        response = await protocol.Protocol.build_response(request_type, db_response)
+        logging.info(f"Response message: {response}")
         # Need to use write with drain as it might be queued in a write buffer
         # if it cannot be sent immediately
-        writer.write(data)
+        writer.write(bytes(json.dumps(response), encoding="utf-8"))
+        await writer.drain()
+        writer.write_eof()
         await writer.drain()
 
-        # print("Close the connection")
+        # This method closes the stream AND the underlying socket
         writer.close()
 
     # Returns a callback
@@ -52,21 +61,24 @@ class Server:
         """
         Coroutine which parses client requests.
         The requests will be in json format
+        NOTE this will need to be expanded to handle multiple requests in the one json file
         :param request: json format of request
-        :return callback: action (future)
+        :return (Protocol type Enum, [database response]): Returns a tuple with the function code and relevant data from database
         """
         match request["code"]:
             case "READ":
                 self.logger.debug(f"READ request from {request['from_other']}")
-                return fetch_chat(request["from_other"])
+                return protocol.Protocol.READ, self.read(request)
             case "WRITE":
                 self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
+                return protocol.Protocol.WRITE, []
             case "LOGIN":
-                pass
+                self.logger.debug(f"LOGIN request ")
+                return protocol.Protocol.LOGIN, []
             case "LOGOUT":
-                pass
+                return protocol.Protocol.LOGOUT, []
             case "REGISTER":
-                pass
+                return protocol.Protocol.REGISTER, []
 
     async def main(self):
         """
@@ -83,4 +95,6 @@ class Server:
         async with server:
             await server.serve_forever()
 
+    def read(self, request):
+        return fetch_chat(request["from_other"])
 
