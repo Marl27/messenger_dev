@@ -2,9 +2,9 @@ import asyncio
 import logging
 import sys
 import json
-from database.read import fetch_chat
+from database import read, login_or_register
 from server.protocol import Protocol
-#from main import HOSTNAME, PORT
+# from main import HOSTNAME, PORT
 
 # Default parameters
 # HOSTNAME = HOSTNAME  # Should bind on all interfaces
@@ -49,7 +49,7 @@ class Server:
             message = json.loads(data.decode())  # Decoding message from bytestream to utf-8 encoded text to json (dict)
 
             request_type, db_response = self.parse_request(message)
-            # Ensures the rows returned from databse contain the correct types for each position
+            # Ensures the rows returned from database contain the correct types for each position
             db_response = self.database_type_coerce(request_type, db_response)
             self.logger.debug(f"Received {message!r} from {addr!r}")
 
@@ -87,7 +87,7 @@ class Server:
                 return Protocol.WRITE, []
             case "LOGIN":
                 self.logger.debug(f"LOGIN request ")
-                return Protocol.LOGIN, []
+                return Protocol.LOGIN, Server.login_db(request)
             case "LOGOUT":
                 return Protocol.LOGOUT, []
             case "REGISTER":
@@ -110,7 +110,11 @@ class Server:
 
     @staticmethod
     def read_from_db(request):
-        return fetch_chat(request["from_other"])
+        return read.fetch_chat(request["from_other"])
+
+    @staticmethod
+    def login_db(request):
+        return login_or_register.login(request["username"], request["password_hash"])
 
     def database_type_coerce(self, type, db_tuples):
         if type == Protocol.READ:
