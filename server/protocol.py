@@ -1,5 +1,5 @@
 import enum
-
+from collections import defaultdict
 
 class Protocol(enum.Enum):
     """
@@ -49,7 +49,7 @@ class Protocol(enum.Enum):
         using the response from the database.
 
         :param response_type: Can be one of: Protocol.LOGIN, Protocol.LOGOUT, Protocol.REGISTER, Protocol.READ, Protocol.WRITE
-        :param db_response: - list of tuples (rows) from the database
+        :param db_response: - single tuple from the database
         :return packet: dict - json representation of the packet
         """
         packet = {}  # Empty packet
@@ -67,15 +67,30 @@ class Protocol(enum.Enum):
                 # 1 = charlie
                 # 2 = himalya
                 # 3 = Random
+
                 packet = {"code": "READ",
-                          "direction": Protocol.RESPONSE.value,
-                          "to": db_response[0][0],
-                          "from_other": db_response[0][1],
-                          "is_broadcast": db_response[0][2],
-                          "group_name": db_response[0][3],
-                          "message": db_response[0][4],
-                          "starred": db_response[0][5],
-                          "created_at": db_response[0][6]}
+                            "direction": 100,
+                            "messages": {}}
+
+                num_messages = len(db_response)
+                def_dict = defaultdict(int)
+                for i in range(num_messages):
+                    def_dict[i] += 1
+
+                d = dict(def_dict)
+
+                for k, v in enumerate(d):
+                    d[k] = {"to": db_response[k][0],
+                            "from_other": db_response[k][1],
+                            "is_broadcast": db_response[k][2],
+                            "group_name": db_response[k][3],
+                            "message": db_response[k][4],
+                            "starred": db_response[k][5],
+                            "created_at": db_response[k][6]}
+
+                packet["messages"] |= d
+
+
             case Protocol.WRITE:
                 packet = {"code": "WRITE", "direction": Protocol.REQUEST.value, }
         return packet
