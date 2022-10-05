@@ -33,9 +33,9 @@ class Server:
         :return:
         """
         addr = writer.get_extra_info("peername")
-        logging.info(f"Client {addr} connected.")
+        self.logger.info(f"Client {addr} connected.")
         self.connected_clients.append(addr)  # Add this client to list of currently connected clients
-        # Need to make sure message isn't truncated (1024 bytes max) and then we can't deserialise it
+
         logout = False
         while not logout:
             # reinitialise variables
@@ -48,18 +48,20 @@ class Server:
                 reader)  # to run coroutines you need to call them using the 'await' keyword
             message = json.loads(data.decode())  # Decoding message from bytestream to utf-8 encoded text to json (dict)
 
-            # this is generic, so to decide what kind of data will be returned from db
-            # we need additional info i.e. what the "code" value is, but that's
-            # the whole purpose of parse_request...
-            request_type, db_response = await self.parse_request(message)
-            logging.info(f"Received {message!r} from {addr!r}")
+            request_type, db_response = self.parse_request(message)
+            # Ensures the rows returned from databse contain the correct types for each position
+            db_response = self.database_type_coerce(request_type, db_response)
+            self.logger.debug(f"Received {message!r} from {addr!r}")
 
             response = await Protocol.build_response(request_type, db_response)
-            logging.info(f"Response message: {response}")
-            # Need to use write with drain as it might be queued in a write buffer
-            # if it cannot be sent immediately
+            self.logger.debug(f"Response message: {response}")
+
             if response["code"] == "LOGOUT":
+                self.logger.info(f"Client {addr!r} disconnected.")
+                self.connected_clients.remove(addr)
+                self.logger.debug(f"Connected clients: {self.connected_clients!r}")
                 logout = True
+
             response = json.dumps(response).encode("utf-8")
             await Protocol.write_message(response, writer)
 
@@ -67,10 +69,9 @@ class Server:
         writer.close()
         await writer.wait_closed()
 
-
-    async def parse_request(self, request: dict):
+    def parse_request(self, request: dict):
         """
-        Coroutine which parses client requests.
+        Method which parses client requests.
         The requests will be in json format
         NOTE this will need to be expanded to handle multiple requests in the one json file
 
@@ -102,7 +103,7 @@ class Server:
         server = await asyncio.start_server(self.handle_client, self.hostname, self.port)
 
         addrs = ', '.join(str(sock.getsockname()) for sock in server.sockets)
-        logging.info(f"Serving on {addrs}")
+        self.logger.info(f"Serving on {addrs}")
 
         async with server:
             await server.serve_forever()
@@ -110,3 +111,20 @@ class Server:
     @staticmethod
     def read_from_db(request):
         return fetch_chat(request["from_other"])
+
+    def database_type_coerce(self, type, db_tuples):
+        if type == Protocol.READ:
+            updated_tuples =[]
+            for row in db_tuples:
+                new_tuple = (
+                    int(row[0]),
+                    int(row[1]),
+                    bool(row[2]),
+                    str(row[3]),
+                    str(row[4]),
+                    bool(row[5]),
+                    # This last one should eventually be changed to datetime
+                    str(row[6])
+                )
+                updated_tuples.append(new_tuple)
+        return db_tuples

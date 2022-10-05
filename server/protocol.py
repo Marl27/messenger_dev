@@ -1,5 +1,5 @@
 import enum
-
+from collections import defaultdict
 
 class Protocol(enum.Enum):
     """
@@ -49,7 +49,7 @@ class Protocol(enum.Enum):
         using the response from the database.
 
         :param response_type: Can be one of: Protocol.LOGIN, Protocol.LOGOUT, Protocol.REGISTER, Protocol.READ, Protocol.WRITE
-        :param db_response: - list of tuples (rows) from the database
+        :param db_response: - single tuple from the database
         :return packet: dict - json representation of the packet
         """
         packet = {}  # Empty packet
@@ -67,15 +67,31 @@ class Protocol(enum.Enum):
                 # 1 = charlie
                 # 2 = himalya
                 # 3 = Random
+
                 packet = {"code": "READ",
-                          "direction": Protocol.RESPONSE.value,
-                          "to": db_response[0][0],
-                          "from_other": db_response[0][1],
-                          "is_broadcast": db_response[0][2],
-                          "group_name": db_response[0][3],
-                          "message": db_response[0][4],
-                          "starred": db_response[0][5],
-                          "created_at": db_response[0][6]}
+                            "direction": 100,
+                            "messages": {}}
+
+                num_messages = len(db_response)
+                def_dict = defaultdict(int)
+                for i in range(num_messages):
+                    def_dict[i] += 1
+                # Freeze default dict making it readonly
+                def_dict.default_factory = None
+                d = dict(def_dict)
+
+                for k, v in enumerate(d):
+                    d[k] = {"to": db_response[k][0],
+                            "from_other": db_response[k][1],
+                            "is_broadcast": db_response[k][2],
+                            "group_name": db_response[k][3],
+                            "message": db_response[k][4],
+                            "starred": db_response[k][5],
+                            "created_at": db_response[k][6]}
+
+                packet["messages"] |= d
+
+
             case Protocol.WRITE:
                 packet = {"code": "WRITE", "direction": Protocol.REQUEST.value, }
         return packet
@@ -83,25 +99,31 @@ class Protocol(enum.Enum):
     @staticmethod
     async def write_message(octets, writer):
         """
-        Helper method which prepends writes length of outgoing message first.
+        Helper coroutine which prepends writes length of outgoing message first.
+
         :param octets: str - The message to send
         :param writer: asyncio.StreamWriter - The stream writer object
         :return:
         """
         writer.write(b"%d\n" % len(octets))
         writer.write(octets)
+        # Need to use write with drain as it might be queued in a write buffer
+        # if it cannot be sent immediately
         await writer.drain()
 
     @staticmethod
     async def read_message(reader):
         """
-        Helper method which first reads the length of the incoming message
+        Helper coroutine which first reads the length of the incoming message
         then reads the exact number of bytes.
+
         :param reader: asyncio.StreamReader - the reader object
-        :return:
+        :return future:
         """
         prefix = await reader.readline()
-        msg_len = int(prefix)
+        msg_len = 0
+        if prefix:
+            msg_len = int(prefix)
         return await reader.readexactly(msg_len)
 
 
