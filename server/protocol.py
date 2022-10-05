@@ -76,7 +76,8 @@ class Protocol(enum.Enum):
                 def_dict = defaultdict(int)
                 for i in range(num_messages):
                     def_dict[i] += 1
-
+                # Freeze default dict making it readonly
+                def_dict.default_factory = None
                 d = dict(def_dict)
 
                 for k, v in enumerate(d):
