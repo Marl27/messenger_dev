@@ -113,14 +113,17 @@ class Server:
 
     def database_type_coerce(self, type, db_tuples):
         if type == Protocol.READ:
+            updated_tuples =[]
             for row in db_tuples:
-                row[0] = int(row[0])
-                row[1] = int(row[1])
-                row[2] = bool(row[2])
-                row[3] = int(row[3])
-                row[4] = str(row[4])
-                row[5] = bool(row[5])
-                # This last one should eventually be changed to datetime
-                row[6] = str(row[6])
-
+                new_tuple = (
+                    int(row[0]),
+                    int(row[1]),
+                    bool(row[2]),
+                    str(row[3]),
+                    str(row[4]),
+                    bool(row[5]),
+                    # This last one should eventually be changed to datetime
+                    str(row[6])
+                )
+                updated_tuples.append(new_tuple)
         return db_tuples
