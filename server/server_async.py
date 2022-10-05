@@ -47,10 +47,9 @@ class Server:
                 reader)  # to run coroutines you need to call them using the 'await' keyword
             message = json.loads(data.decode())  # Decoding message from bytestream to utf-8 encoded text to json (dict)
 
-            # this is generic, so to decide what kind of data will be returned from db
-            # we need additional info i.e. what the "code" value is, but that's
-            # the whole purpose of parse_request...
             request_type, db_response = self.parse_request(message)
+            # Ensures the rows returned from databse contain the correct types for each position
+            db_response = self.database_type_coerce(request_type, db_response)
             self.logger.debug(f"Received {message!r} from {addr!r}")
 
             response = await Protocol.build_response(request_type, db_response)
@@ -111,3 +110,17 @@ class Server:
     @staticmethod
     def read_from_db(request):
         return fetch_chat(request["from_other"])
+
+    def database_type_coerce(self, type, db_tuples):
+        if type == Protocol.READ:
+            for row in db_tuples:
+                row[0] = int(row[0])
+                row[1] = int(row[1])
+                row[2] = bool(row[2])
+                row[3] = int(row[3])
+                row[4] = str(row[4])
+                row[5] = bool(row[5])
+                # This last one should eventually be changed to datetime
+                row[6] = str(row[6])
+
+        return db_tuples
