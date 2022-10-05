@@ -68,7 +68,9 @@ class Protocol(enum.Enum):
                           "message": "goodbye"}
 
             case Protocol.LOGIN:
-                packet = {"code": "LOGIN"}
+                packet = {"code": "LOGIN",
+                          "authenticated":db_response[0][0],
+                          "user_id":db_response[0][1]}
             case Protocol.REGISTER:
                 pass
             case Protocol.READ:

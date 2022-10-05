@@ -17,7 +17,7 @@ def login(user_name, password):
         employee_id, *other = row
         return True, employee_id
     else:
-        return False
+        return False, None
 
 
 # if __name__ == '__main__':
