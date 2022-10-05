@@ -105,7 +105,9 @@ class Protocol(enum.Enum):
         :return future:
         """
         prefix = await reader.readline()
-        msg_len = int(prefix)
+        msg_len = 0
+        if prefix:
+            msg_len = int(prefix)
         return await reader.readexactly(msg_len)
 
 
