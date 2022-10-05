@@ -50,7 +50,7 @@ class Server:
 
             request_type, db_response = self.parse_request(message)
             # Ensures the rows returned from database contain the correct types for each position
-            db_response = self.database_type_coerce(request_type, db_response)
+            db_response = Server.database_type_coerce(request_type, db_response)
             self.logger.debug(f"Received {message!r} from {addr!r}")
 
             response = await Protocol.build_response(request_type, db_response)
@@ -116,7 +116,8 @@ class Server:
     def login_db(request):
         return login_or_register.login(request["username"], request["password_hash"])
 
-    def database_type_coerce(self, type, db_tuples):
+    @staticmethod
+    def database_type_coerce(type, db_tuples):
         if type == Protocol.READ:
             updated_tuples =[]
             for row in db_tuples:
