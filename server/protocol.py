@@ -36,7 +36,7 @@ class Protocol(enum.Enum):
         packet = {}  # Empty packet
         match request_type:
             case Protocol.LOGOUT:
-                packet = {"code": "LOGOUT"}
+                packet = {"code": "LOGOUT", "username": username}
             case Protocol.LOGIN:
                 packet = {"code": "LOGIN", "username": username, "password_hash": password_hash}
             case Protocol.REGISTER:

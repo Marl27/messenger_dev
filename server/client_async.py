@@ -41,16 +41,22 @@ class Client:
     async def tcp_session_client(self):
         reader, writer = await asyncio.open_connection(self.hostname, self.port)
         print(f"Connected to server on {self.hostname}:{self.port}")
-        print(f"Please enter login credentials")
-        username = input("Username: ")
-        # How to hide the text like it does when logging in on linux?
-        password = input("Password: ")
 
-        message = Protocol.build_request(Protocol.LOGIN, username=username, password_hash=password)
-        await Protocol.write_message(json.dumps(message).encode("utf-8"), writer)
-        server_response = await Protocol.read_message(reader)
-        server_response = json.loads(server_response.decode("utf-8"))
-        print(f"Server response: {server_response}")
+        # Login
+        authenticated = False
+        while not authenticated:
+            print(f"Please enter login credentials")
+            username = input("Username: ")
+            # How to hide the text like it does when logging in on linux?
+            password = input("Password: ")
+
+            message = Protocol.build_request(Protocol.LOGIN, username=username, password_hash=password)
+            await Protocol.write_message(json.dumps(message).encode("utf-8"), writer)
+            server_response = await Protocol.read_message(reader)
+            server_response = json.loads(server_response.decode("utf-8"))
+            print(f"Server response: {server_response}")
+            if server_response["authenticated"]:
+                authenticated = True
 
         print(f"Commands: read, write, test, quit")
         logout = False
@@ -75,7 +81,7 @@ class Client:
                 continue
 
             elif command == "quit":
-                message = Protocol.build_request(Protocol.LOGOUT)
+                message = Protocol.build_request(Protocol.LOGOUT, username=username)
                 logout = True
 
             await Protocol.write_message(json.dumps(message).encode("utf-8"), writer)

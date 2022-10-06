@@ -5,6 +5,8 @@ import json
 from database import read_chat, login_or_register
 
 from server.protocol import Protocol
+
+
 # from main import HOSTNAME, PORT
 
 # Default parameters
@@ -37,25 +39,31 @@ class Server:
         self.logger.info(f"Client {addr} connected.")
         self.connected_clients.append(addr)  # Add this client to list of currently connected clients
 
-        # Login
-        login_request = await Protocol.read_message(reader)
-        login_data = json.loads(login_request.decode())
+        # Private variable to keep in login loop unless successful
+        __authenticated = False
+        while not __authenticated:
+            # Login
+            # to run coroutines you need to call them using the 'await' keyword
+            login_request = await Protocol.read_message(reader)
+            login_data = json.loads(login_request.decode())
 
-        # here db_response has type (bool, employee_id)
-        # if the login is a failure employee_id will be None
-        # We know this is a login request so ignore the first return val
-        _, db_response = self.parse_request(login_data)
-        if not db_response[0]:
-            # i.e. if the database returns an unsuccessful authentication
-            # set client object's employee id
-            pass
+            # here db_response has type (bool, employee_id)
+            # if the login is a failure employee_id will be None
+            # We know this is a login request so ignore the first return val
+            _, db_response = self.parse_request(login_data)
 
-        # Passing bd_response in list to keep types passed to build_response the same
-        # This should be refactored to pass a common type later on otherwise bugs
-        #   will creep in
-        login_response = await Protocol.build_response(Protocol.LOGIN, [db_response])
-        login_response = json.dumps(login_response).encode("utf-8")
-        await Protocol.write_message(login_response, writer)
+            # Passing bd_response in list to keep types passed to build_response the same
+            # This should be refactored to pass a common type later on otherwise bugs
+            #   will creep in
+            login_response = await Protocol.build_response(Protocol.LOGIN, [db_response])
+            login_response = json.dumps(login_response).encode("utf-8")
+            await Protocol.write_message(login_response, writer)
+
+            if db_response[0]:
+                # i.e. if the database returns a successful authentication
+                __authenticated = True
+
+
 
         # Post login main loop
         logout = False
@@ -66,8 +74,7 @@ class Server:
             message = {}
             response = {}
 
-            data = await Protocol.read_message(
-                reader)  # to run coroutines you need to call them using the 'await' keyword
+            data = await Protocol.read_message(reader)
             message = json.loads(data.decode())  # Decoding message from bytestream to utf-8 encoded text to json (dict)
 
             request_type, db_response = self.parse_request(message)
@@ -112,8 +119,10 @@ class Server:
                 self.logger.debug(f"LOGIN request from username {request['username']}")
                 return Protocol.LOGIN, Server.login_db(request)
             case "LOGOUT":
+                self.logger.debug(f"LOGOUT request from username {request['username']}")
                 return Protocol.LOGOUT, []
             case "REGISTER":
+                self.logger.debug(f"REGISTER request from username {request['username']}")
                 return Protocol.REGISTER, []
 
     async def main(self):
@@ -133,8 +142,8 @@ class Server:
 
     @staticmethod
     def read_from_db(request):
-        # add to fetch_chat later: , request["from_other"]
-        return read_chat.fetch_chat(request["to"])
+        # add to fetch_chat later:
+        return read_chat.fetch_chat(request["to"], request["from_other"])
 
     @staticmethod
     def login_db(request):
