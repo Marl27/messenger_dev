@@ -1,10 +1,8 @@
 from .database_connect import db_connect
 
 
-
 def create_table():
-    conn = db_connect()
-    cursor = conn.cursor()
+    conn, cursor = db_connect()
     try:
         cursor.executescript("""
         CREATE TABLE IF NOT EXISTS employees (
