@@ -2,7 +2,7 @@ import asyncio
 import logging
 import sys
 import json
-from database.read_chat import fetch_chat
+from database import read_chat, login_or_register
 
 from server.protocol import Protocol
 # from main import HOSTNAME, PORT
@@ -134,7 +134,7 @@ class Server:
     @staticmethod
     def read_from_db(request):
         # add to fetch_chat later: , request["from_other"]
-        return read.fetch_chat(request["to"])
+        return read_chat.fetch_chat(request["to"])
 
     @staticmethod
     def login_db(request):
