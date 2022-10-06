@@ -2,7 +2,7 @@ import asyncio
 import logging
 import sys
 import json
-from database.read import fetch_chat
+from database.read_chat import fetch_chat
 from server.protocol import Protocol
 #from main import HOSTNAME, PORT
 
