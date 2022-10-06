@@ -1,6 +1,7 @@
 import enum
 from collections import defaultdict
 
+
 class Protocol(enum.Enum):
     """
     This class defines our application-layer protocol for client-server communication
@@ -16,7 +17,13 @@ class Protocol(enum.Enum):
     RESPONSE = 100
 
     @staticmethod
-    def build_request(request_type: 'Protocol', to: str = "", from_other: str = "", payload: str = ""):
+    def build_request(request_type: 'Protocol',
+                      to: str = "",
+                      from_other: str = "",
+                      payload: str = "",
+                      username: str = "",
+                      password_hash: str = ""):
+
         """
         Static method to build a request packet.
         :param request_type: header for function code (see protocol class)
@@ -25,12 +32,13 @@ class Protocol(enum.Enum):
         :param payload: string message
         :return packet: json representation of packet
         """
+
         packet = {}  # Empty packet
         match request_type:
             case Protocol.LOGOUT:
-                packet = {"code":"LOGOUT"}
+                packet = {"code": "LOGOUT"}
             case Protocol.LOGIN:
-                pass
+                packet = {"code": "LOGIN", "username": username, "password_hash": password_hash}
             case Protocol.REGISTER:
                 pass
             case Protocol.READ:
@@ -56,11 +64,13 @@ class Protocol(enum.Enum):
         match response_type:
             case Protocol.LOGOUT:
                 packet = {"code": "LOGOUT",
-                          "direction" : Protocol.RESPONSE.value,
+                          "direction": Protocol.RESPONSE.value,
                           "message": "goodbye"}
 
             case Protocol.LOGIN:
-                packet = {"code" : "LOGIN"}
+                packet = {"code": "LOGIN",
+                          "authenticated":db_response[0][0],
+                          "user_id":db_response[0][1]}
             case Protocol.REGISTER:
                 pass
             case Protocol.READ:
@@ -69,8 +79,8 @@ class Protocol(enum.Enum):
                 # 3 = Random
 
                 packet = {"code": "READ",
-                            "direction": 100,
-                            "messages": {}}
+                          "direction": 100,
+                          "messages": {}}
 
                 num_messages = len(db_response)
                 def_dict = defaultdict(int)
@@ -90,7 +100,6 @@ class Protocol(enum.Enum):
                             "created_at": db_response[k][6]}
 
                 packet["messages"] |= d
-
 
             case Protocol.WRITE:
                 packet = {"code": "WRITE", "direction": Protocol.REQUEST.value, }

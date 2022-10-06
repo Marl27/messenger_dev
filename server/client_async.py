@@ -3,8 +3,8 @@ import json
 import sys
 from server.protocol import Protocol
 
-# HOSTNAME = "127.0.0.1"
-# PORT = 8888
+HOSTNAME = "127.0.0.1"
+PORT = 8888
 
 
 class Client:
@@ -41,6 +41,17 @@ class Client:
     async def tcp_session_client(self):
         reader, writer = await asyncio.open_connection(self.hostname, self.port)
         print(f"Connected to server on {self.hostname}:{self.port}")
+        print(f"Please enter login credentials")
+        username = input("Username: ")
+        # How to hide the text like it does when logging in on linux?
+        password = input("Password: ")
+
+        message = Protocol.build_request(Protocol.LOGIN, username=username, password_hash=password)
+        await Protocol.write_message(json.dumps(message).encode("utf-8"), writer)
+        server_response = await Protocol.read_message(reader)
+        server_response = json.loads(server_response.decode("utf-8"))
+        print(f"Server response: {server_response}")
+
         print(f"Commands: read, write, test, quit")
         logout = False
         while not logout:
@@ -112,8 +123,8 @@ message = ""
 #
 # elif sys.argv[3] == "test":
 #     message = TEST_PACKET
-client = Client()
-asyncio.run(client.tcp_session_client(), debug=True)
+client = Client(HOSTNAME, PORT)
+asyncio.run(client.tcp_session_client(), debug=False)
 
 # num_clients = 10
 # # Creates 'num_clients' number of client objects with a random id number

@@ -3,8 +3,9 @@ import logging
 import sys
 import json
 from database.read_chat import fetch_chat
+
 from server.protocol import Protocol
-#from main import HOSTNAME, PORT
+# from main import HOSTNAME, PORT
 
 # Default parameters
 # HOSTNAME = HOSTNAME  # Should bind on all interfaces
@@ -36,6 +37,27 @@ class Server:
         self.logger.info(f"Client {addr} connected.")
         self.connected_clients.append(addr)  # Add this client to list of currently connected clients
 
+        # Login
+        login_request = await Protocol.read_message(reader)
+        login_data = json.loads(login_request.decode())
+
+        # here db_response has type (bool, employee_id)
+        # if the login is a failure employee_id will be None
+        # We know this is a login request so ignore the first return val
+        _, db_response = self.parse_request(login_data)
+        if not db_response[0]:
+            # i.e. if the database returns an unsuccessful authentication
+            # set client object's employee id
+            pass
+
+        # Passing bd_response in list to keep types passed to build_response the same
+        # This should be refactored to pass a common type later on otherwise bugs
+        #   will creep in
+        login_response = await Protocol.build_response(Protocol.LOGIN, [db_response])
+        login_response = json.dumps(login_response).encode("utf-8")
+        await Protocol.write_message(login_response, writer)
+
+        # Post login main loop
         logout = False
         while not logout:
             # reinitialise variables
@@ -49,8 +71,9 @@ class Server:
             message = json.loads(data.decode())  # Decoding message from bytestream to utf-8 encoded text to json (dict)
 
             request_type, db_response = self.parse_request(message)
-            # Ensures the rows returned from databse contain the correct types for each position
-            db_response = self.database_type_coerce(request_type, db_response)
+            self.logger.debug(f"request type: {request_type}, db_response: {type(db_response)}")
+            # Ensures the rows returned from database contain the correct types for each position
+            db_response = Server.database_type_coerce(request_type, db_response)
             self.logger.debug(f"Received {message!r} from {addr!r}")
 
             response = await Protocol.build_response(request_type, db_response)
@@ -86,8 +109,8 @@ class Server:
                 self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
                 return Protocol.WRITE, []
             case "LOGIN":
-                self.logger.debug(f"LOGIN request ")
-                return Protocol.LOGIN, []
+                self.logger.debug(f"LOGIN request from username {request['username']}")
+                return Protocol.LOGIN, Server.login_db(request)
             case "LOGOUT":
                 return Protocol.LOGOUT, []
             case "REGISTER":
@@ -110,11 +133,17 @@ class Server:
 
     @staticmethod
     def read_from_db(request):
-        return fetch_chat(request["from_other"])
+        # add to fetch_chat later: , request["from_other"]
+        return read.fetch_chat(request["to"])
 
-    def database_type_coerce(self, type, db_tuples):
+    @staticmethod
+    def login_db(request):
+        return login_or_register.login(request["username"], request["password_hash"])
+
+    @staticmethod
+    def database_type_coerce(type, db_tuples):
         if type == Protocol.READ:
-            updated_tuples =[]
+            updated_tuples = []
             for row in db_tuples:
                 new_tuple = (
                     int(row[0]),
