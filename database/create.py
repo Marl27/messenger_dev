@@ -25,7 +25,7 @@ def create_table():
             is_broadcasted BOOLEAN,
             group_name varchar,
             message TEXT NOT NULL,
-            stared BOOLEAN,
+            is_stared BOOLEAN,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """)

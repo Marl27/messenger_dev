@@ -2,9 +2,25 @@ import asyncio
 import json
 import sys
 from server.protocol import Protocol
+from employee import Employee
 
 HOSTNAME = "127.0.0.1"
 PORT = 8888
+
+
+def register():
+    first_name = input("First name: ")
+    print("Middle name: (leave blank if none)")
+    middle_name = input("Middle name: ")
+    last_name = input("Last name: ")
+    username = input("Username: ")
+    password = input("Password: ")
+    start_date = input("Start date: ")
+    print("Leaving date: (leave blank if unknown)")
+    leaving_date = input("Leaving date: ")
+
+    return Employee(first_name=first_name, middle_name=middle_name, last_name=last_name,
+                    username=username, password=password, start_date=start_date, leaving_date=leaving_date)
 
 
 class Client:
@@ -41,16 +57,44 @@ class Client:
     async def tcp_session_client(self):
         reader, writer = await asyncio.open_connection(self.hostname, self.port)
         print(f"Connected to server on {self.hostname}:{self.port}")
-        print(f"Please enter login credentials")
-        username = input("Username: ")
-        # How to hide the text like it does when logging in on linux?
-        password = input("Password: ")
 
-        message = Protocol.build_request(Protocol.LOGIN, username=username, password_hash=password)
-        await Protocol.write_message(json.dumps(message).encode("utf-8"), writer)
-        server_response = await Protocol.read_message(reader)
-        server_response = json.loads(server_response.decode("utf-8"))
-        print(f"Server response: {server_response}")
+        # Login
+        authenticated = False
+        while not authenticated:
+            print(f"Login or register: ")
+
+            valid_choice = False
+            while not valid_choice:
+                login_or_register = input("> ")
+
+                match login_or_register:
+                    case "register":
+                        valid_choice = True
+                        registration = register()
+                        registration_message = Protocol.build_request(Protocol.REGISTER, employee=registration)
+                        print(f"Registration request: {registration_message}")
+                        await Protocol.write_message(json.dumps(registration_message).encode("utf-8"), writer)
+                        server_response = await Protocol.read_message(reader)
+                        server_response = json.loads(server_response.decode("utf-8"))
+                        print(f"Server response: {server_response}")
+
+                    case "login":
+                        valid_choice = True
+
+            print(f"Please enter login credentials")
+            username = input("Username: ")
+            # How to hide the text like it does when logging in on linux?
+            password = input("Password: ")
+
+            login_message = Protocol.build_request(Protocol.LOGIN, username=username, password=password)
+            await Protocol.write_message(json.dumps(login_message).encode("utf-8"), writer)
+            server_response = await Protocol.read_message(reader)
+            server_response = json.loads(server_response.decode("utf-8"))
+            print(f"Server response: {server_response}")
+            if server_response["authenticated"]:
+                authenticated = True
+            else:
+                print("Incorrect username or password.")
 
         print(f"Commands: read, write, test, quit")
         logout = False
@@ -75,7 +119,7 @@ class Client:
                 continue
 
             elif command == "quit":
-                message = Protocol.build_request(Protocol.LOGOUT)
+                message = Protocol.build_request(Protocol.LOGOUT, username=username)
                 logout = True
 
             await Protocol.write_message(json.dumps(message).encode("utf-8"), writer)

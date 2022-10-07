@@ -20,3 +20,13 @@ _insert_register_employee = """
         """
 
 # UPDATE statements
+
+# --------------------------------------------------------------------------
+# write_chat.py
+# --------------------------------------------------------------------------
+# INSERT statements for private and group chat
+_insert_private_chat = """
+        INSERT INTO messenger (sender, receiver, message, is_broadcasted, group_name, is_stared) 
+        VALUES(?,?,?,?,?,?)
+        """
+#
