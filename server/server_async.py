@@ -4,6 +4,7 @@ import sys
 import json
 from database import read_chat, login_or_register
 from employee import Employee
+from messenger import Messenger
 
 from server.protocol import Protocol
 
@@ -110,7 +111,8 @@ class Server:
         match request["code"]:
             case "READ":
                 self.logger.debug(f"READ request from {request['from_other']}")
-                return Protocol.READ, Server.read_from_db(request)
+                return Protocol.READ, Server.read_from_db(Messenger(sender=request["to"],
+                                                                    receiver=request["from_other"]))
 
             case "WRITE":
                 self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
@@ -150,9 +152,9 @@ class Server:
             await server.serve_forever()
 
     @staticmethod
-    def read_from_db(request):
+    def read_from_db(messenger):
         # add to fetch_chat later:
-        return read_chat.fetch_chat(request["to"], request["from_other"])
+        return messenger.read_chat_from_messenger()
 
     @staticmethod
     def login_db(request):
