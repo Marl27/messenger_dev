@@ -20,9 +20,10 @@ class Protocol(enum.Enum):
     def build_request(request_type: 'Protocol',
                       to: str = "",
                       from_other: str = "",
+                      username = "",
+                      password = "",
                       payload: str = "",
-                      username: str = "",
-                      password_hash: str = ""):
+                      employee=None):
 
         """
         Static method to build a request packet.
@@ -30,24 +31,45 @@ class Protocol(enum.Enum):
         :param to: username
         :param from_other: username
         :param payload: string message
+        :param employee: employee object with their personal data
         :return packet: json representation of packet
         """
 
         packet = {}  # Empty packet
         match request_type:
             case Protocol.LOGOUT:
-                packet = {"code": "LOGOUT"}
+                packet = {"code": "LOGOUT",
+                          "username": username}
+
             case Protocol.LOGIN:
-                packet = {"code": "LOGIN", "username": username, "password_hash": password_hash}
+                packet = {"code": "LOGIN",
+                          "username": username,
+                          "password": password}
+
             case Protocol.REGISTER:
-                pass
+                packet = {"code": "REGISTER",
+                          "username": employee.username,
+                          "password": employee.password,
+                          "first_name": employee.first_name,
+                          "middle_name": employee.middle_name,
+                          "last_name": employee.last_name,
+                          "start_date": employee.start_date,
+                          "leaving_date": employee.leaving_date}
+
             case Protocol.READ:
                 # 1 = charlie
                 # 2 = himalya
                 # 3 = Random
-                packet = {"code": "READ", "direction": Protocol.REQUEST.value, "from_other": from_other, "to": to}
+                packet = {"code": "READ",
+                          "direction": Protocol.REQUEST.value,
+                          "from_other": from_other,
+                          "to": to}
+
             case Protocol.WRITE:
-                packet = {"code": "WRITE", "direction": Protocol.REQUEST.value, "to": to, "payload": payload}
+                packet = {"code": "WRITE",
+                          "direction": Protocol.REQUEST.value,
+                          "to": to,
+                          "payload": payload}
         return packet
 
     @staticmethod
@@ -69,27 +91,37 @@ class Protocol(enum.Enum):
 
             case Protocol.LOGIN:
                 packet = {"code": "LOGIN",
-                          "authenticated":db_response[0][0],
-                          "user_id":db_response[0][1]}
+                          "direction": Protocol.RESPONSE.value,
+                          "authenticated": db_response[0][0],
+                          "user_id": db_response[0][1]}
+
             case Protocol.REGISTER:
-                pass
+                packet = {"code": "REGISTER",
+                          "direction": Protocol.RESPONSE.value,
+                          }
+
             case Protocol.READ:
                 # 1 = charlie
                 # 2 = himalya
                 # 3 = Random
 
                 packet = {"code": "READ",
-                          "direction": 100,
+                          "direction": Protocol.RESPONSE.value,
                           "messages": {}}
 
                 num_messages = len(db_response)
+
+                # Using defaultdict here to generate n inner dictionaries
+                # to hold the n read messages from db
                 def_dict = defaultdict(int)
                 for i in range(num_messages):
                     def_dict[i] += 1
+
                 # Freeze default dict making it readonly
                 def_dict.default_factory = None
                 d = dict(def_dict)
 
+                # Populating the inner dictionaries, each holds 1 message
                 for k, v in enumerate(d):
                     d[k] = {"to": db_response[k][0],
                             "from_other": db_response[k][1],
@@ -102,7 +134,8 @@ class Protocol(enum.Enum):
                 packet["messages"] |= d
 
             case Protocol.WRITE:
-                packet = {"code": "WRITE", "direction": Protocol.REQUEST.value, }
+                packet = {"code": "WRITE",
+                          "direction": Protocol.REQUEST.value, }
         return packet
 
     @staticmethod
