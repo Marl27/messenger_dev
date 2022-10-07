@@ -3,6 +3,7 @@ import logging
 import sys
 import json
 from database import read_chat, login_or_register
+from employee import Employee
 
 from server.protocol import Protocol
 
@@ -42,28 +43,26 @@ class Server:
         # Private variable to keep in login loop unless successful
         __authenticated = False
         while not __authenticated:
-            # Login
+            # Login or register
             # to run coroutines you need to call them using the 'await' keyword
-            login_request = await Protocol.read_message(reader)
-            login_data = json.loads(login_request.decode())
+            login_register_request = await Protocol.read_message(reader)
+            login_registration_data = json.loads(login_register_request.decode())
 
             # here db_response has type (bool, employee_id)
             # if the login is a failure employee_id will be None
             # We know this is a login request so ignore the first return val
-            _, db_response = self.parse_request(login_data)
+            request_type, db_response = self.parse_request(login_registration_data)
 
             # Passing bd_response in list to keep types passed to build_response the same
             # This should be refactored to pass a common type later on otherwise bugs
             #   will creep in
-            login_response = await Protocol.build_response(Protocol.LOGIN, [db_response])
-            login_response = json.dumps(login_response).encode("utf-8")
-            await Protocol.write_message(login_response, writer)
+            login_registration_response = await Protocol.build_response(request_type, [db_response])
+            login_registration_response = json.dumps(login_registration_response).encode("utf-8")
+            await Protocol.write_message(login_registration_response, writer)
 
-            if db_response[0]:
+            if request_type == Protocol.LOGIN and db_response[0]:
                 # i.e. if the database returns a successful authentication
                 __authenticated = True
-
-
 
         # Post login main loop
         logout = False
@@ -112,18 +111,28 @@ class Server:
             case "READ":
                 self.logger.debug(f"READ request from {request['from_other']}")
                 return Protocol.READ, Server.read_from_db(request)
+
             case "WRITE":
                 self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
                 return Protocol.WRITE, []
+
             case "LOGIN":
                 self.logger.debug(f"LOGIN request from username {request['username']}")
                 return Protocol.LOGIN, Server.login_db(request)
+
             case "LOGOUT":
                 self.logger.debug(f"LOGOUT request from username {request['username']}")
                 return Protocol.LOGOUT, []
+
             case "REGISTER":
                 self.logger.debug(f"REGISTER request from username {request['username']}")
-                return Protocol.REGISTER, []
+                return Protocol.REGISTER, Server.register_db(Employee(username=request["username"],
+                                                                      password=request["password"],
+                                                                      first_name=request["first_name"],
+                                                                      middle_name=request["middle_name"],
+                                                                      last_name=request["last_name"],
+                                                                      start_date=request["start_date"],
+                                                                      leaving_date=request["leaving_date"]))
 
     async def main(self):
         """
@@ -147,7 +156,11 @@ class Server:
 
     @staticmethod
     def login_db(request):
-        return login_or_register.login(request["username"], request["password_hash"])
+        return login_or_register.login(request["username"], request["password"])
+
+    @staticmethod
+    def register_db(employee):
+        return employee.register_employee()
 
     @staticmethod
     def database_type_coerce(type, db_tuples):
