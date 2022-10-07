@@ -3,7 +3,8 @@ from database.write_chat import write_chat
 
 
 class Messenger:
-    def __init__(self, sender, receiver,  message="", is_broadcasted=False, group_name=None, is_stared=False):
+    def __init__(self, sender, receiver, message="", is_broadcasted=False, group_name=None, is_stared=False):
+
         self.sender = sender
         self.receiver = receiver
         self.message = message
