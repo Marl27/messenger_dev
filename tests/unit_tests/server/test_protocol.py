@@ -91,7 +91,16 @@ class TestProtocol:
         actual = Protocol.build_request(protocol_register, employee=employee)
         assert actual == register_packet
 
+    @pytest.mark.parametrize()
     def test_build_request_read(self):
+
+        test_db_tuples = [
+            (1, 2, False, 0, "hello", False, "time goes here"),
+            (2, 1, False, 0, "hello reply", False, "time goes here"),
+            (1, 2, False, 0, "2nd message", False, "time goes here"),
+            (2, 1, False, 0, "2nd message reply", False, "time goes here"),
+        ]
+
         assert True
 
     def test_build_request_write(self):
