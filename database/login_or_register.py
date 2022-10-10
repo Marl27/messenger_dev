@@ -1,12 +1,12 @@
-from .database_connect import db_connect, logging
+from .database_connect import logging
 from .config import _login_query, _insert_register_employee
 
 # from database_connect import db_connect, logging
 # from config import _login_query, _insert_register_employee
 
 
-def login(user_name, password):
-    conn, cursor = db_connect()
+def login(conn, cursor, user_name, password):
+    # conn, cursor = db_connect()
     cursor.execute(_login_query, (user_name, password,))
     row = cursor.fetchone()
     if row is not None:
@@ -23,8 +23,8 @@ def login(user_name, password):
 #         """
 
 
-def register(first_name, start_date, username, password, middle_name, last_name, leaving_date):
-    conn, cursor = db_connect()
+def register(conn, cursor, first_name, start_date, username, password, middle_name, last_name, leaving_date):
+    # conn, cursor = db_connect()
     with conn:
         cursor.execute(_insert_register_employee, (first_name, start_date, username, password, middle_name, last_name,
                                                    leaving_date,))

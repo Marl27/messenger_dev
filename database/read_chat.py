@@ -1,19 +1,19 @@
-from .database_connect import db_connect, logging
+from .database_connect import logging
 from .config import _select_private_window, _select_receiver_from_messenger, _select_group_window
 
 # from database_connect import db_connect, logging
 # from config import _select_private_window, _select_receiver_from_messenger, _select_group_window
 
 
-def private_window(employee_id, receiver_id):
-    conn, cursor = db_connect()
+def private_window(conn, cursor, employee_id, receiver_id):
+    # conn, cursor = db_connect()
     cursor.execute(_select_private_window, (employee_id, receiver_id,))
     rows = cursor.fetchall()
     return rows
 
 
-def group_window(employee_id, receiver_ids):
-    conn, cursor = db_connect()
+def group_window(conn, cursor, employee_id, receiver_ids):
+    # conn, cursor = db_connect()
     cursor.execute(_select_receiver_from_messenger)
     all_groups = cursor.fetchall()
     group_members = sorted(receiver_ids)
@@ -32,14 +32,14 @@ def group_window(employee_id, receiver_ids):
                 return rows
 
 
-def fetch_chat(employee_id, receiver_id):
+def fetch_chat(conn, cursor, employee_id, receiver_id):
     receiver = list(map(int, receiver_id.split(',')))
     if len(receiver) > 1:
         logging.info('group window open')
-        return group_window(employee_id, receiver)
+        return group_window(conn, cursor, employee_id, receiver)
     else:
         logging.info('private window')
-        return private_window(employee_id, receiver[0])
+        return private_window(conn, cursor, employee_id, receiver[0])
 
 
 # if __name__ == '__main__':
