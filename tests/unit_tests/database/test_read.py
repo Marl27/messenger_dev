@@ -1,6 +1,3 @@
-user_id = 1
-receiver = 2
-
 
 def test_private_window():
     assert 1 == 1
