@@ -171,12 +171,12 @@ class Server:
 
     @staticmethod
     def database_type_coerce(type, db_tuples):
-        if type == Protocol.READ:
+        if type == Protocol.READ and db_tuples is not None:
             updated_tuples = []
             for row in db_tuples:
                 new_tuple = (
                     int(row[0]),
-                    int(row[1]),
+                    row[1],
                     bool(row[2]),
                     str(row[3]),
                     str(row[4]),
