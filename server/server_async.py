@@ -18,11 +18,12 @@ from server.protocol import Protocol
 
 class Server:
 
-    def __init__(self, hostname: str, port: int, logging_level: str = logging.WARN):
+    def __init__(self, hostname: str, port: int, conn, cursor, logging_level: str = logging.WARN):
         self.connected_clients = []  # List for now, might need to change data structure
-        self.database = None  # Placeholder for database
         self.hostname = hostname
         self.port = port
+        self.conn = conn
+        self.cursor = cursor
         self.logger = logging.getLogger("Server_logger")
         self.logger.setLevel(logging_level)
         logging.basicConfig(stream=sys.stdout, level=logging_level)
@@ -111,7 +112,9 @@ class Server:
         match request["code"]:
             case "READ":
                 self.logger.debug(f"READ request from {request['from_other']}")
-                return Protocol.READ, Server.read_from_db(Messenger(sender=request["to"],
+                return Protocol.READ, Server.read_from_db(Messenger(conn=self.conn,
+                                                                    cursor=self.cursor,
+                                                                    sender=request["to"],
                                                                     receiver=request["from_other"]))
 
             case "WRITE":
@@ -120,7 +123,7 @@ class Server:
 
             case "LOGIN":
                 self.logger.debug(f"LOGIN request from username {request['username']}")
-                return Protocol.LOGIN, Server.login_db(request)
+                return Protocol.LOGIN, Server.login_db(conn=self.conn, cursor=self.cursor, request=request)
 
             case "LOGOUT":
                 self.logger.debug(f"LOGOUT request from username {request['username']}")
@@ -128,7 +131,9 @@ class Server:
 
             case "REGISTER":
                 self.logger.debug(f"REGISTER request from username {request['username']}")
-                return Protocol.REGISTER, Server.register_db(Employee(username=request["username"],
+                return Protocol.REGISTER, Server.register_db(Employee(conn=self.conn,
+                                                                      cursor=self.cursor,
+                                                                      username=request["username"],
                                                                       password=request["password"],
                                                                       first_name=request["first_name"],
                                                                       middle_name=request["middle_name"],
@@ -157,8 +162,8 @@ class Server:
         return messenger.read_chat_from_messenger()
 
     @staticmethod
-    def login_db(request):
-        return login_or_register.login(request["username"], request["password"])
+    def login_db(conn, cursor, request):
+        return login_or_register.login(conn, cursor, user_name=request["username"], password=request["password"])
 
     @staticmethod
     def register_db(employee):
