@@ -39,15 +39,18 @@ class Protocol(enum.Enum):
         match request_type:
             case Protocol.LOGOUT:
                 packet = {"code": "LOGOUT",
+                          "direction": Protocol.REQUEST.value,
                           "username": username}
 
             case Protocol.LOGIN:
                 packet = {"code": "LOGIN",
+                          "direction": Protocol.REQUEST.value,
                           "username": username,
                           "password": password}
 
             case Protocol.REGISTER:
                 packet = {"code": "REGISTER",
+                          "direction": Protocol.REQUEST.value,
                           "username": employee.username,
                           "password": employee.password,
                           "first_name": employee.first_name,
