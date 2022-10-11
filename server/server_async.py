@@ -43,7 +43,7 @@ class Server:
         self.connected_clients.append(addr)  # Add this client to list of currently connected clients
 
         # Private variable to keep in login loop unless successful
-        __authenticated = False
+        __authenticated = True
         while not __authenticated:
             # Login or register
             # to run coroutines you need to call them using the 'await' keyword
@@ -81,7 +81,7 @@ class Server:
             request_type, db_response = self.parse_request(message)
             self.logger.debug(f"request type: {request_type}, db_response: {type(db_response)}")
             # Ensures the rows returned from database contain the correct types for each position
-            db_response = Server.database_type_coerce(request_type, db_response)
+            #db_response = Server.database_type_coerce(request_type, db_response)
             self.logger.debug(f"Received {message!r} from {addr!r}")
 
             response = await Protocol.build_response(request_type, db_response)
@@ -169,20 +169,21 @@ class Server:
     def register_db(employee):
         return employee.register_employee()
 
-    @staticmethod
-    def database_type_coerce(type, db_tuples):
-        if type == Protocol.READ and db_tuples is not None:
-            updated_tuples = []
-            for row in db_tuples:
-                new_tuple = (
-                    int(row[0]),
-                    row[1],
-                    bool(row[2]),
-                    str(row[3]),
-                    str(row[4]),
-                    bool(row[5]),
-                    # This last one should eventually be changed to datetime
-                    str(row[6])
-                )
-                updated_tuples.append(new_tuple)
-        return db_tuples
+    # # fix me for multiple reads
+    # @staticmethod
+    # def database_type_coerce(type, db_tuples):
+    #     if type == Protocol.READ and db_tuples is not None:
+    #         updated_tuples = []
+    #         for row in db_tuples:
+    #             new_tuple = (
+    #                 int(row[0]),
+    #                 row[1],
+    #                 bool(row[2]),
+    #                 str(row[3]),
+    #                 str(row[4]),
+    #                 bool(row[5]),
+    #                 # This last one should eventually be changed to datetime
+    #                 str(row[6])
+    #             )
+    #             updated_tuples.append(new_tuple)
+    #     return db_tuples
