@@ -60,7 +60,7 @@ class Client:
         print(f"Connected to server on {self.hostname}:{self.port}")
 
         # Login
-        __authenticated = True
+        __authenticated = False
         while not __authenticated:
             print(f"Login or register: ")
 

@@ -43,7 +43,7 @@ class Server:
         self.connected_clients.append(addr)  # Add this client to list of currently connected clients
 
         # Private variable to keep in login loop unless successful
-        __authenticated = True
+        __authenticated = False
         while not __authenticated:
             # Login or register
             # to run coroutines you need to call them using the 'await' keyword
