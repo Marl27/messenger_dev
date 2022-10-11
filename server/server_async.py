@@ -118,8 +118,16 @@ class Server:
                                                                     receiver=request["receiver"]))
 
             case "WRITE":
-                self.logger.debug(f"WRITE request to {request['sender']} : {request['payload']}")
-                return Protocol.WRITE, []
+                self.logger.debug(f"WRITE request from {request['sender']} to {request['receiver']}"
+                                  f" : {request['message']}")
+                return Protocol.WRITE, Server.write_to_db(Messenger(conn=self.conn,
+                                                                    cursor=self.cursor,
+                                                                    sender=request["sender"],
+                                                                    receiver=request["receiver"],
+                                                                    is_broadcasted=request["is_broadcast"],
+                                                                    group_name=request["group_name"],
+                                                                    message=request["message"],
+                                                                    is_stared=request["starred"]))
 
             case "LOGIN":
                 self.logger.debug(f"LOGIN request from username {request['username']}")
@@ -160,6 +168,10 @@ class Server:
     def read_from_db(messenger):
         # add to fetch_chat later:
         return messenger.read_chat_from_messenger()
+
+    @staticmethod
+    def write_to_db(messenger):
+        return messenger.write_chat_to_messenger()
 
     @staticmethod
     def login_db(conn, cursor, request):

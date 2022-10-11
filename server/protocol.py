@@ -20,10 +20,10 @@ class Protocol(enum.Enum):
     def build_request(request_type: 'Protocol',
                       sender: str = "",
                       receiver: str = "",
-                      username = "",
-                      password = "",
-                      payload: str = "",
-                      employee=None):
+                      username="",
+                      password="",
+                      employee=None,
+                      messenger=None):
 
         """
         Static method to build a request packet.
@@ -68,8 +68,13 @@ class Protocol(enum.Enum):
             case Protocol.WRITE:
                 packet = {"code": "WRITE",
                           "direction": Protocol.REQUEST.value,
-                          "sender": sender,
-                          "payload": payload}
+                          "sender": messenger.sender,
+                          "receiver": messenger.receiver,
+                          "is_broadcast": messenger.is_broadcasted,
+                          "group_name": messenger.group_name,
+                          "message": messenger.message,
+                          "starred": messenger.is_stared
+                          }
         return packet
 
     @staticmethod
@@ -123,7 +128,8 @@ class Protocol(enum.Enum):
 
             case Protocol.WRITE:
                 packet = {"code": "WRITE",
-                          "direction": Protocol.REQUEST.value, }
+                          "direction": Protocol.RESPONSE.value,
+                          }
         return packet
 
     @staticmethod
@@ -176,6 +182,7 @@ class Protocol(enum.Enum):
                     "starred": message_chain[k][5],
                     "created_at": message_chain[k][6]}
         return d
+
 
 """
 Header fields:

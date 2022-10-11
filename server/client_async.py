@@ -3,6 +3,8 @@ import json
 import sys
 from server.protocol import Protocol
 from employee import Employee
+import logging
+from messenger import Messenger
 
 HOSTNAME = "127.0.0.1"
 PORT = 8888
@@ -29,35 +31,15 @@ class Client:
         self.hostname = hostname
         self.port = port
         self.name = id
-
-
-    async def tcp_echo_client(self, message: str):
-        """
-        Skeleton of a client program - not needed any more
-        Interestingly, asyncio open_connection defaults to IPv6
-        :param message: String to send
-        :return:lz
-        """
-
-        # will change this to be command line input
-        # either in a run loop after starting client program or from command line
-        print(f"self.hostname = {self.hostname}, self.port = {self.port}")
-        reader, writer = await asyncio.open_connection(self.hostname, self.port)
-        print(f"Send request: {message!r}")
-        # request = json.dumps(message, encoding="utf-8") +
-        writer.write(bytes(json.dumps(message), encoding="utf-8"))
-        await writer.drain()
-
-        data = await reader.read(-1)
-        print(f"Received: {data.decode()!r}")
-
-        print("Close the connection")
-        writer.close()
-        await writer.wait_closed()
+        self.logger = logging.getLogger("Client logger")
+        # Hard coding logging level in here for now
+        self.logger.setLevel(logging.DEBUG)
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+        self.uid = -1
 
     async def tcp_session_client(self):
         reader, writer = await asyncio.open_connection(self.hostname, self.port)
-        print(f"Connected to server on {self.hostname}:{self.port}")
+        self.logger.info(f"Connected to server on {self.hostname}:{self.port}")
 
         # Login
         __authenticated = False
@@ -73,11 +55,11 @@ class Client:
                         valid_choice = True
                         registration = register()
                         registration_message = Protocol.build_request(Protocol.REGISTER, employee=registration)
-                        print(f"Registration request: {registration_message}")
+                        self.logger.debug(f"Registration request: {registration_message}")
                         await Protocol.write_message(json.dumps(registration_message).encode("utf-8"), writer)
                         server_response = await Protocol.read_message(reader)
                         server_response = json.loads(server_response.decode("utf-8"))
-                        print(f"Server response: {server_response}")
+                        self.logger.debug(f"Server response: {server_response}")
 
                     case "login":
                         valid_choice = True
@@ -91,9 +73,10 @@ class Client:
             await Protocol.write_message(json.dumps(login_message).encode("utf-8"), writer)
             server_response = await Protocol.read_message(reader)
             server_response = json.loads(server_response.decode("utf-8"))
-            print(f"Server response: {server_response}")
+            self.logger.debug(f"Server response: {server_response}")
             if server_response["authenticated"]:
                 __authenticated = True
+                self.uid = server_response["user_id"]
             else:
                 print("Incorrect username or password.")
 
@@ -103,14 +86,14 @@ class Client:
             message = {}
             command = input("> ")
             if command == "read":
-                uid = input("Enter your user id> ")
                 receiver = input("Read from whom? > ")
-                message = Protocol.build_request(Protocol.READ, receiver=receiver, sender=uid)
+                message = Protocol.build_request(Protocol.READ, receiver=receiver, sender=self.uid)
 
             elif command == "write":
-                sender = input("Write to whom? >")
+                receiver = input("Write to whom? >")
                 message = input("Enter message >")
-                message = Protocol.build_request(Protocol.WRITE, sender=sender, payload=message)
+                messenger = self.create_message(receiver=receiver, message=message)
+                message = Protocol.build_request(Protocol.WRITE, sender=self.uid, messenger=messenger)
 
             elif command == "test":
                 message = TEST_PACKET
@@ -126,20 +109,30 @@ class Client:
             await Protocol.write_message(json.dumps(message).encode("utf-8"), writer)
             server_response = await Protocol.read_message(reader)
             server_response = json.loads(server_response.decode("utf-8"))
-            print(f"Server response: {server_response}")
+            self.logger.debug(f"Server response: {server_response}")
 
         writer.close()
         await writer.wait_closed()
 
+    def create_message(self, receiver, message):
+        messenger = Messenger(conn=None,
+                              cursor=None,
+                              sender=self.uid,
+                              receiver=receiver,
+                              message=message,
+                              is_broadcasted=False,
+                              group_name="",
+                              is_stared=False)
+        return messenger
 
 client = None
 
 TEST_PACKET = {
-    "code": "LOGIN",
-    "direction": Protocol.REQUEST.value,
-    "sender": "Cruthe93",
-    "message": 0xDEADBEEF,
-    "testval": [x for x in range(10000)]
+    # "code": "LOGIN",
+    # "direction": Protocol.REQUEST.value,
+    # "sender": "Cruthe93",
+    # "message": 0xDEADBEEF,
+    # "testval": [x for x in range(10000)]
 }
 
 helpstring = "Commands: read, write, test, help, quit"
