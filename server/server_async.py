@@ -111,14 +111,14 @@ class Server:
         """
         match request["code"]:
             case "READ":
-                self.logger.debug(f"READ request from {request['from_other']}")
+                self.logger.debug(f"READ request from {request['receiver']}")
                 return Protocol.READ, Server.read_from_db(Messenger(conn=self.conn,
                                                                     cursor=self.cursor,
-                                                                    sender=request["to"],
-                                                                    receiver=request["from_other"]))
+                                                                    sender=request["sender"],
+                                                                    receiver=request["receiver"]))
 
             case "WRITE":
-                self.logger.debug(f"WRITE request to {request['to']} : {request['payload']}")
+                self.logger.debug(f"WRITE request to {request['sender']} : {request['payload']}")
                 return Protocol.WRITE, []
 
             case "LOGIN":

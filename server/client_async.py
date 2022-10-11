@@ -104,13 +104,13 @@ class Client:
             command = input("> ")
             if command == "read":
                 uid = input("Enter your user id> ")
-                fro = input("Read from whom? > ")
-                message = Protocol.build_request(Protocol.READ, from_other=fro, to=uid)
+                receiver = input("Read from whom? > ")
+                message = Protocol.build_request(Protocol.READ, receiver=receiver, sender=uid)
 
             elif command == "write":
-                to = input("Write to whom? >")
+                sender = input("Write to whom? >")
                 message = input("Enter message >")
-                message = Protocol.build_request(Protocol.WRITE, to=to, payload=message)
+                message = Protocol.build_request(Protocol.WRITE, sender=sender, payload=message)
 
             elif command == "test":
                 message = TEST_PACKET
@@ -137,7 +137,7 @@ client = None
 TEST_PACKET = {
     "code": "LOGIN",
     "direction": Protocol.REQUEST.value,
-    "to": "Cruthe93",
+    "sender": "Cruthe93",
     "message": 0xDEADBEEF,
     "testval": [x for x in range(10000)]
 }
@@ -158,13 +158,13 @@ message = ""
 # if sys.argv[3] == "read":
 #     uid = input("Enter your user id> ")
 #     fro = input("Read from whom? > ")
-#     message = Protocol.build_request(Protocol.READ, from_other=fro, to=uid)
+#     message = Protocol.build_request(Protocol.READ, receiver=fro, sender=uid)
 #
 # elif sys.argv[3] == "write":
 #
-#     to = input("Write to whom? >")
+#     sender = input("Write to whom? >")
 #     message = input("Enter message >")
-#     message = Protocol.build_request(Protocol.WRITE, to=to, payload=message)
+#     message = Protocol.build_request(Protocol.WRITE, sender=sender, payload=message)
 #
 # elif sys.argv[3] == "test":
 #     message = TEST_PACKET

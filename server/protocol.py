@@ -18,8 +18,8 @@ class Protocol(enum.Enum):
 
     @staticmethod
     def build_request(request_type: 'Protocol',
-                      to: str = "",
-                      from_other: str = "",
+                      sender: str = "",
+                      receiver: str = "",
                       username = "",
                       password = "",
                       payload: str = "",
@@ -29,7 +29,7 @@ class Protocol(enum.Enum):
         Static method to build a request packet.
         :param request_type: header for function code (see protocol class)
         :param to: username
-        :param from_other: username
+        :param receiver: username
         :param payload: string message
         :param employee: employee object with their personal data
         :return packet: json representation of packet
@@ -62,13 +62,13 @@ class Protocol(enum.Enum):
                 # 3 = Random
                 packet = {"code": "READ",
                           "direction": Protocol.REQUEST.value,
-                          "from_other": from_other,
-                          "to": to}
+                          "receiver": receiver,
+                          "sender": sender}
 
             case Protocol.WRITE:
                 packet = {"code": "WRITE",
                           "direction": Protocol.REQUEST.value,
-                          "to": to,
+                          "sender": sender,
                           "payload": payload}
         return packet
 
@@ -168,8 +168,8 @@ class Protocol(enum.Enum):
         d = dict(def_dict)
 
         for k, v in enumerate(d):
-            d[k] = {"to": message_chain[k][0],
-                    "from_other": message_chain[k][1],
+            d[k] = {"sender": message_chain[k][0],
+                    "receiver": message_chain[k][1],
                     "is_broadcast": message_chain[k][2],
                     "group_name": message_chain[k][3],
                     "message": message_chain[k][4],
@@ -187,16 +187,16 @@ code:   READ
         REGISTER
         
 read packet:
-    from_other
+    receiver
     
 write packet:
-    to
+    sender
     payload (utf-8 message)
     
     
 Database returns list of tuples for read each containing:
-int UserId "to" (the logged in user doing the read) 
-int UserId "from_other" (user who sent the message to the logged in user)
+int UserId "sender" (the logged in user doing the read) 
+int UserId "receiver" (user who sent the message to the logged in user)
 bool broadcast (is the message a broadcast) 
 int? groupId
 string message
