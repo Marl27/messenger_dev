@@ -4,7 +4,10 @@
 # SELECT statements
 _select_private_window = "SELECT * FROM messenger m WHERE sender = ? AND receiver = ?"
 _select_group_window = "SELECT * FROM messenger m WHERE receiver = ?"
-_select_receiver_from_messenger = "SELECT receiver FROM messenger m"
+_select_receiver_where_more_than_1 = """
+                        SELECT receiver FROM messenger m
+                        WHERE LENGTH(receiver) > 1
+                        """
 
 
 # --------------------------------------------------------------------------
