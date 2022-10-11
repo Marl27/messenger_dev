@@ -36,9 +36,10 @@ class Client:
         self.port = port
         self.name = id
 
+
     async def tcp_echo_client(self, message: str):
         """
-        Skeleton of a client program
+        Skeleton of a client program - not needed any more
         Interestingly, asyncio open_connection defaults to IPv6
         :param message: String to send
         :return:lz
@@ -65,8 +66,8 @@ class Client:
         print(f"Connected to server on {self.hostname}:{self.port}")
 
         # Login
-        authenticated = False
-        while not authenticated:
+        __authenticated = False
+        while not __authenticated:
             print(f"Login or register: ")
 
             valid_choice = False
@@ -106,7 +107,7 @@ class Client:
             server_response = json.loads(server_response.decode("utf-8"))
             print(f"Server response: {server_response}")
             if server_response["authenticated"]:
-                authenticated = True
+                __authenticated = True
             else:
                 print("Incorrect username or password.")
 
@@ -117,13 +118,13 @@ class Client:
             command = input("> ")
             if command == "read":
                 uid = input("Enter your user id> ")
-                fro = input("Read from whom? > ")
-                message = Protocol.build_request(Protocol.READ, from_other=fro, to=uid)
+                receiver = input("Read from whom? > ")
+                message = Protocol.build_request(Protocol.READ, receiver=receiver, sender=uid)
 
             elif command == "write":
-                to = input("Write to whom? >")
+                sender = input("Write to whom? >")
                 message = input("Enter message >")
-                message = Protocol.build_request(Protocol.WRITE, to=to, payload=message)
+                message = Protocol.build_request(Protocol.WRITE, sender=sender, payload=message)
 
             elif command == "test":
                 message = TEST_PACKET
@@ -150,7 +151,7 @@ client = None
 TEST_PACKET = {
     "code": "LOGIN",
     "direction": Protocol.REQUEST.value,
-    "to": "Cruthe93",
+    "sender": "Cruthe93",
     "message": 0xDEADBEEF,
     "testval": [x for x in range(10000)],
 }
@@ -171,13 +172,13 @@ message = ""
 # if sys.argv[3] == "read":
 #     uid = input("Enter your user id> ")
 #     fro = input("Read from whom? > ")
-#     message = Protocol.build_request(Protocol.READ, from_other=fro, to=uid)
+#     message = Protocol.build_request(Protocol.READ, receiver=fro, sender=uid)
 #
 # elif sys.argv[3] == "write":
 #
-#     to = input("Write to whom? >")
+#     sender = input("Write to whom? >")
 #     message = input("Enter message >")
-#     message = Protocol.build_request(Protocol.WRITE, to=to, payload=message)
+#     message = Protocol.build_request(Protocol.WRITE, sender=sender, payload=message)
 #
 # elif sys.argv[3] == "test":
 #     message = TEST_PACKET

@@ -94,7 +94,7 @@ class Server:
                 f"request type: {request_type}, db_response: {type(db_response)}"
             )
             # Ensures the rows returned from database contain the correct types for each position
-            db_response = Server.database_type_coerce(request_type, db_response)
+            #db_response = Server.database_type_coerce(request_type, db_response)
             self.logger.debug(f"Received {message!r} from {addr!r}")
 
             response = await Protocol.build_response(request_type, db_response)
@@ -124,20 +124,15 @@ class Server:
         """
         match request["code"]:
             case "READ":
-                self.logger.debug(f"READ request from {request['from_other']}")
-                return Protocol.READ, Server.read_from_db(
-                    Messenger(
-                        conn=self.conn,
-                        cursor=self.cursor,
-                        sender=request["to"],
-                        receiver=request["from_other"],
-                    )
-                )
+                self.logger.debug(f"READ request from {request['receiver']}")
+                return Protocol.READ, Server.read_from_db(Messenger(conn=self.conn,
+                                                                    cursor=self.cursor,
+                                                                    sender=request["sender"],
+                                                                    receiver=request["receiver"]))
 
             case "WRITE":
-                self.logger.debug(
-                    f"WRITE request to {request['to']} : {request['payload']}"
-                )
+                self.logger.debug(f"WRITE request to {request['sender']} : {request['payload']}")
+
                 return Protocol.WRITE, []
 
             case "LOGIN":
@@ -200,20 +195,23 @@ class Server:
     def register_db(employee):
         return employee.register_employee()
 
-    @staticmethod
-    def database_type_coerce(type, db_tuples):
-        if type == Protocol.READ and db_tuples is not None:
-            updated_tuples = []
-            for row in db_tuples:
-                new_tuple = (
-                    int(row[0]),
-                    row[1],
-                    bool(row[2]),
-                    str(row[3]),
-                    str(row[4]),
-                    bool(row[5]),
-                    # This last one should eventually be changed to datetime
-                    str(row[6]),
-                )
-                updated_tuples.append(new_tuple)
-        return db_tuples
+
+    # # fix me for multiple reads
+    # @staticmethod
+    # def database_type_coerce(type, db_tuples):
+    #     if type == Protocol.READ and db_tuples is not None:
+    #         updated_tuples = []
+    #         for row in db_tuples:
+    #             new_tuple = (
+    #                 int(row[0]),
+    #                 row[1],
+    #                 bool(row[2]),
+    #                 str(row[3]),
+    #                 str(row[4]),
+    #                 bool(row[5]),
+    #                 # This last one should eventually be changed to datetime
+    #                 str(row[6])
+    #             )
+    #             updated_tuples.append(new_tuple)
+    #     return db_tuples
+
