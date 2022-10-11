@@ -18,8 +18,8 @@ class Protocol(enum.Enum):
 
     @staticmethod
     def build_request(request_type: 'Protocol',
-                      to: str = "",
-                      from_other: str = "",
+                      sender: str = "",
+                      receiver: str = "",
                       username = "",
                       password = "",
                       payload: str = "",
@@ -29,7 +29,7 @@ class Protocol(enum.Enum):
         Static method to build a request packet.
         :param request_type: header for function code (see protocol class)
         :param to: username
-        :param from_other: username
+        :param receiver: username
         :param payload: string message
         :param employee: employee object with their personal data
         :return packet: json representation of packet
@@ -62,13 +62,13 @@ class Protocol(enum.Enum):
                 # 3 = Random
                 packet = {"code": "READ",
                           "direction": Protocol.REQUEST.value,
-                          "from_other": from_other,
-                          "to": to}
+                          "receiver": receiver,
+                          "sender": sender}
 
             case Protocol.WRITE:
                 packet = {"code": "WRITE",
                           "direction": Protocol.REQUEST.value,
-                          "to": to,
+                          "sender": sender,
                           "payload": payload}
         return packet
 
@@ -108,30 +108,18 @@ class Protocol(enum.Enum):
                 packet = {"code": "READ",
                           "direction": Protocol.RESPONSE.value,
                           "messages": {}}
+                # loop here
 
-                num_messages = len(db_response)
+                if any(isinstance(el, list) for el in db_response):
+                    # We know it's a list of lists
+                    dlist = []
+                    for chain in db_response:
+                        for tuple in chain:
+                            dlist.append(tuple)
 
-                # Using defaultdict here to generate n inner dictionaries
-                # to hold the n read messages from db
-                def_dict = defaultdict(int)
-                for i in range(num_messages):
-                    def_dict[i] += 1
-
-                # Freeze default dict making it readonly
-                def_dict.default_factory = None
-                d = dict(def_dict)
-
-                # Populating the inner dictionaries, each holds 1 message
-                for k, v in enumerate(d):
-                    d[k] = {"to": db_response[k][0],
-                            "from_other": db_response[k][1],
-                            "is_broadcast": db_response[k][2],
-                            "group_name": db_response[k][3],
-                            "message": db_response[k][4],
-                            "starred": db_response[k][5],
-                            "created_at": db_response[k][6]}
-
-                packet["messages"] |= d
+                    packet["messages"] |= Protocol.extract_messages(dlist)
+                else:
+                    packet["messages"] |= Protocol.extract_messages(db_response)
 
             case Protocol.WRITE:
                 packet = {"code": "WRITE",
@@ -168,6 +156,26 @@ class Protocol(enum.Enum):
             msg_len = int(prefix)
         return await reader.readexactly(msg_len)
 
+    # Takes in a single message chain of type list of tuples and builds the response dictionary
+    @staticmethod
+    def extract_messages(message_chain):
+        num_messages = len(message_chain)
+        d = {}
+        def_dict = defaultdict(int)
+        for i in range(num_messages):
+            def_dict[i] += 1
+        def_dict.default_factory = None
+        d = dict(def_dict)
+
+        for k, v in enumerate(d):
+            d[k] = {"sender": message_chain[k][0],
+                    "receiver": message_chain[k][1],
+                    "is_broadcast": message_chain[k][2],
+                    "group_name": message_chain[k][3],
+                    "message": message_chain[k][4],
+                    "starred": message_chain[k][5],
+                    "created_at": message_chain[k][6]}
+        return d
 
 """
 Header fields:
@@ -179,16 +187,16 @@ code:   READ
         REGISTER
         
 read packet:
-    from_other
+    receiver
     
 write packet:
-    to
+    sender
     payload (utf-8 message)
     
     
 Database returns list of tuples for read each containing:
-int UserId "to" (the logged in user doing the read) 
-int UserId "from_other" (user who sent the message to the logged in user)
+int UserId "sender" (the logged in user doing the read) 
+int UserId "receiver" (user who sent the message to the logged in user)
 bool broadcast (is the message a broadcast) 
 int? groupId
 string message
