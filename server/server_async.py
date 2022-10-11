@@ -94,7 +94,7 @@ class Server:
                 f"request type: {request_type}, db_response: {type(db_response)}"
             )
             # Ensures the rows returned from database contain the correct types for each position
-            #db_response = Server.database_type_coerce(request_type, db_response)
+            # db_response = Server.database_type_coerce(request_type, db_response)
             self.logger.debug(f"Received {message!r} from {addr!r}")
 
             response = await Protocol.build_response(request_type, db_response)
@@ -125,13 +125,19 @@ class Server:
         match request["code"]:
             case "READ":
                 self.logger.debug(f"READ request from {request['receiver']}")
-                return Protocol.READ, Server.read_from_db(Messenger(conn=self.conn,
-                                                                    cursor=self.cursor,
-                                                                    sender=request["sender"],
-                                                                    receiver=request["receiver"]))
+                return Protocol.READ, Server.read_from_db(
+                    Messenger(
+                        conn=self.conn,
+                        cursor=self.cursor,
+                        sender=request["sender"],
+                        receiver=request["receiver"],
+                    )
+                )
 
             case "WRITE":
-                self.logger.debug(f"WRITE request to {request['sender']} : {request['payload']}")
+                self.logger.debug(
+                    f"WRITE request to {request['sender']} : {request['payload']}"
+                )
 
                 return Protocol.WRITE, []
 
@@ -195,7 +201,6 @@ class Server:
     def register_db(employee):
         return employee.register_employee()
 
-
     # # fix me for multiple reads
     # @staticmethod
     # def database_type_coerce(type, db_tuples):
@@ -214,4 +219,3 @@ class Server:
     #             )
     #             updated_tuples.append(new_tuple)
     #     return db_tuples
-
