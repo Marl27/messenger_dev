@@ -2,9 +2,10 @@ import asyncio
 import logging
 import sys
 import json
-from database import read_chat, login_or_register
+from database import login_or_register
 from employee import Employee
 from messenger import Messenger
+from server.internal_client import Client
 
 from server.protocol import Protocol
 
@@ -40,7 +41,8 @@ class Server:
         """
         addr = writer.get_extra_info("peername")
         self.logger.info(f"Client {addr} connected.")
-        self.connected_clients.append(addr)  # Add this client to list of currently connected clients
+        client = Client(*addr)
+        self.connected_clients.append(client)  # Add this client to list of currently connected clients
 
         # Private variable to keep in login loop unless successful
         __authenticated = False
@@ -49,11 +51,15 @@ class Server:
             # to run coroutines you need to call them using the 'await' keyword
             login_register_request = await Protocol.read_message(reader)
             login_registration_data = json.loads(login_register_request.decode())
-
+            client.username = login_registration_data["username"]
+            self.logger.debug(f"Received : {login_registration_data}")
             # here db_response has type (bool, employee_id)
             # if the login is a failure employee_id will be None
-            # We know this is a login request so ignore the first return val
             request_type, db_response = self.parse_request(login_registration_data)
+
+            if db_response[1]:
+                self.logger.info(f"Authentication success from {client.username} on {client.host, client.port}")
+                client.uid = db_response[1]
 
             # Passing bd_response in list to keep types passed to build_response the same
             # This should be refactored to pass a common type later on otherwise bugs
@@ -65,6 +71,7 @@ class Server:
             if request_type == Protocol.LOGIN and db_response[0]:
                 # i.e. if the database returns a successful authentication
                 __authenticated = True
+        self.logger.debug(f"Connected clients: {self.connected_clients!r}")
 
         # Post login main loop
         logout = False
@@ -89,7 +96,7 @@ class Server:
 
             if response["code"] == "LOGOUT":
                 self.logger.info(f"Client {addr!r} disconnected.")
-                self.connected_clients.remove(addr)
+                self.connected_clients.remove(client)
                 self.logger.debug(f"Connected clients: {self.connected_clients!r}")
                 logout = True
 
