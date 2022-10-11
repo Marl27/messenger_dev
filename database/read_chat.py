@@ -30,7 +30,9 @@ def group_window(conn, cursor, employee_id, receiver_ids):
     # tuple_list = [('9, 0, 1, 3',), ('4, 0, 2, 7',), ('3, 2',)]
     rows_of_messages = []
     employee_id = int(employee_id)
-    if employee_id in sorted_group_members:  # If employee is a member of the group then fetch messages from the group
+    if (
+        employee_id in sorted_group_members
+    ):  # If employee is a member of the group then fetch messages from the group
         for group in all_groups:
             sorted_group = sorted(list(map(str.strip, group[0].split(","))))
             sorted_group_of_int = list(

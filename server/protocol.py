@@ -18,13 +18,15 @@ class Protocol(enum.Enum):
     RESPONSE = 100
 
     @staticmethod
-    def build_request(request_type: 'Protocol',
-                      sender: str = "",
-                      receiver: str = "",
-                      username = "",
-                      password = "",
-                      payload: str = "",
-                      employee=None):
+    def build_request(
+        request_type: "Protocol",
+        sender: str = "",
+        receiver: str = "",
+        username="",
+        password="",
+        payload: str = "",
+        employee=None,
+    ):
 
         """
         Static method to build a request packet.
@@ -61,16 +63,20 @@ class Protocol(enum.Enum):
                 # 2 = himalya
                 # 3 = Random
 
-                packet = {"code": "READ",
-                          "direction": Protocol.REQUEST.value,
-                          "receiver": receiver,
-                          "sender": sender}
+                packet = {
+                    "code": "READ",
+                    "direction": Protocol.REQUEST.value,
+                    "receiver": receiver,
+                    "sender": sender,
+                }
 
             case Protocol.WRITE:
-                packet = {"code": "WRITE",
-                          "direction": Protocol.REQUEST.value,
-                          "sender": sender,
-                          "payload": payload}
+                packet = {
+                    "code": "WRITE",
+                    "direction": Protocol.REQUEST.value,
+                    "sender": sender,
+                    "payload": payload,
+                }
         return packet
 
     @staticmethod
@@ -111,10 +117,11 @@ class Protocol(enum.Enum):
                 # 2 = himalya
                 # 3 = Random
 
-
-                packet = {"code": "READ",
-                          "direction": Protocol.RESPONSE.value,
-                          "messages": {}}
+                packet = {
+                    "code": "READ",
+                    "direction": Protocol.RESPONSE.value,
+                    "messages": {},
+                }
                 # loop here
 
                 if any(isinstance(el, list) for el in db_response):
@@ -177,14 +184,17 @@ class Protocol(enum.Enum):
         d = dict(def_dict)
 
         for k, v in enumerate(d):
-            d[k] = {"sender": message_chain[k][0],
-                    "receiver": message_chain[k][1],
-                    "is_broadcast": message_chain[k][2],
-                    "group_name": message_chain[k][3],
-                    "message": message_chain[k][4],
-                    "starred": message_chain[k][5],
-                    "created_at": message_chain[k][6]}
+            d[k] = {
+                "sender": message_chain[k][0],
+                "receiver": message_chain[k][1],
+                "is_broadcast": message_chain[k][2],
+                "group_name": message_chain[k][3],
+                "message": message_chain[k][4],
+                "starred": message_chain[k][5],
+                "created_at": message_chain[k][6],
+            }
         return d
+
 
 """
 Header fields:

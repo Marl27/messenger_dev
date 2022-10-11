@@ -36,7 +36,6 @@ class Client:
         self.port = port
         self.name = id
 
-
     async def tcp_echo_client(self, message: str):
         """
         Skeleton of a client program - not needed any more
@@ -119,12 +118,16 @@ class Client:
             if command == "read":
                 uid = input("Enter your user id> ")
                 receiver = input("Read from whom? > ")
-                message = Protocol.build_request(Protocol.READ, receiver=receiver, sender=uid)
+                message = Protocol.build_request(
+                    Protocol.READ, receiver=receiver, sender=uid
+                )
 
             elif command == "write":
                 sender = input("Write to whom? >")
                 message = input("Enter message >")
-                message = Protocol.build_request(Protocol.WRITE, sender=sender, payload=message)
+                message = Protocol.build_request(
+                    Protocol.WRITE, sender=sender, payload=message
+                )
 
             elif command == "test":
                 message = TEST_PACKET
