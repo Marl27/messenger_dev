@@ -1,12 +1,22 @@
 from .database_connect import logging
-from .config import _select_private_window, _select_receiver_where_more_than_1, _select_group_window
+from .config import (
+    _select_private_window,
+    _select_receiver_where_more_than_1,
+    _select_group_window,
+)
 
 # from database_connect import db_connect, logging
 # from config import _select_private_window, _select_receiver_where_more_than_1, _select_group_window
 
 
 def private_window(conn, cursor, employee_id, receiver_id):
-    cursor.execute(_select_private_window, (employee_id, receiver_id,))
+    cursor.execute(
+        _select_private_window,
+        (
+            employee_id,
+            receiver_id,
+        ),
+    )
     rows = cursor.fetchall()
     return rows
 
@@ -22,8 +32,10 @@ def group_window(conn, cursor, employee_id, receiver_ids):
     employee_id = int(employee_id)
     if employee_id in sorted_group_members:  # If employee is a member of the group then fetch messages from the group
         for group in all_groups:
-            sorted_group = sorted(list(map(str.strip, group[0].split(','))))
-            sorted_group_of_int = list(map(int, sorted_group))  # List of ints - [1,2,3,4]
+            sorted_group = sorted(list(map(str.strip, group[0].split(","))))
+            sorted_group_of_int = list(
+                map(int, sorted_group)
+            )  # List of ints - [1,2,3,4]
             if sorted_group_members == sorted_group_of_int:  # [1,2,3,4] ==  [1,2,3,4]
                 cursor.execute(_select_group_window, (group[0],))
                 rows = cursor.fetchall()
@@ -34,12 +46,12 @@ def group_window(conn, cursor, employee_id, receiver_ids):
 
 
 def fetch_chat(conn, cursor, employee_id, receiver_id):
-    receiver = list(map(int, receiver_id.split(',')))
+    receiver = list(map(int, receiver_id.split(",")))
     if len(receiver) > 1:
-        logging.info('group window open')
+        logging.info("group window open")
         return group_window(conn, cursor, employee_id, receiver)
     else:
-        logging.info('private window')
+        logging.info("private window")
         return private_window(conn, cursor, employee_id, receiver[0])
 
 

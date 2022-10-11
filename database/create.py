@@ -3,7 +3,8 @@
 
 def create_table(conn, cursor):
     try:
-        cursor.executescript("""
+        cursor.executescript(
+            """
         CREATE TABLE IF NOT EXISTS employees (
           employee_id INTEGER PRIMARY KEY AUTOINCREMENT ,
           first_name VARCHAR,
@@ -27,7 +28,8 @@ def create_table(conn, cursor):
             is_stared BOOLEAN,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        """)
+        """
+        )
     except conn.DatabaseError:
         conn.rollback()
         raise RuntimeError("Uh oh, an error occurred while Creating tables...")
