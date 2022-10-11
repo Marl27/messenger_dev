@@ -6,6 +6,7 @@ class Protocol(enum.Enum):
     """
     This class defines our application-layer protocol for client-server communication
     """
+
     # Function codes
     LOGOUT = 0
     LOGIN = 1
@@ -38,28 +39,28 @@ class Protocol(enum.Enum):
         packet = {}  # Empty packet
         match request_type:
             case Protocol.LOGOUT:
-                packet = {"code": "LOGOUT",
-                          "username": username}
+                packet = {"code": "LOGOUT", "username": username}
 
             case Protocol.LOGIN:
-                packet = {"code": "LOGIN",
-                          "username": username,
-                          "password": password}
+                packet = {"code": "LOGIN", "username": username, "password": password}
 
             case Protocol.REGISTER:
-                packet = {"code": "REGISTER",
-                          "username": employee.username,
-                          "password": employee.password,
-                          "first_name": employee.first_name,
-                          "middle_name": employee.middle_name,
-                          "last_name": employee.last_name,
-                          "start_date": employee.start_date,
-                          "leaving_date": employee.leaving_date}
+                packet = {
+                    "code": "REGISTER",
+                    "username": employee.username,
+                    "password": employee.password,
+                    "first_name": employee.first_name,
+                    "middle_name": employee.middle_name,
+                    "last_name": employee.last_name,
+                    "start_date": employee.start_date,
+                    "leaving_date": employee.leaving_date,
+                }
 
             case Protocol.READ:
                 # 1 = charlie
                 # 2 = himalya
                 # 3 = Random
+
                 packet = {"code": "READ",
                           "direction": Protocol.REQUEST.value,
                           "receiver": receiver,
@@ -73,7 +74,7 @@ class Protocol(enum.Enum):
         return packet
 
     @staticmethod
-    async def build_response(response_type: 'Protocol', db_response: [(str)]) -> dict:
+    async def build_response(response_type: "Protocol", db_response: [(str)]) -> dict:
         """
         Static method to build a response packet. Takes a response code and builds appropriate packet
         using the response from the database.
@@ -85,25 +86,31 @@ class Protocol(enum.Enum):
         packet = {}  # Empty packet
         match response_type:
             case Protocol.LOGOUT:
-                packet = {"code": "LOGOUT",
-                          "direction": Protocol.RESPONSE.value,
-                          "message": "goodbye"}
+                packet = {
+                    "code": "LOGOUT",
+                    "direction": Protocol.RESPONSE.value,
+                    "message": "goodbye",
+                }
 
             case Protocol.LOGIN:
-                packet = {"code": "LOGIN",
-                          "direction": Protocol.RESPONSE.value,
-                          "authenticated": db_response[0][0],
-                          "user_id": db_response[0][1]}
+                packet = {
+                    "code": "LOGIN",
+                    "direction": Protocol.RESPONSE.value,
+                    "authenticated": db_response[0][0],
+                    "user_id": db_response[0][1],
+                }
 
             case Protocol.REGISTER:
-                packet = {"code": "REGISTER",
-                          "direction": Protocol.RESPONSE.value,
-                          }
+                packet = {
+                    "code": "REGISTER",
+                    "direction": Protocol.RESPONSE.value,
+                }
 
             case Protocol.READ:
                 # 1 = charlie
                 # 2 = himalya
                 # 3 = Random
+
 
                 packet = {"code": "READ",
                           "direction": Protocol.RESPONSE.value,
@@ -122,8 +129,10 @@ class Protocol(enum.Enum):
                     packet["messages"] |= Protocol.extract_messages(db_response)
 
             case Protocol.WRITE:
-                packet = {"code": "WRITE",
-                          "direction": Protocol.REQUEST.value, }
+                packet = {
+                    "code": "WRITE",
+                    "direction": Protocol.REQUEST.value,
+                }
         return packet
 
     @staticmethod

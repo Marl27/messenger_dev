@@ -19,12 +19,18 @@ def register():
     print("Leaving date: (leave blank if unknown)")
     leaving_date = input("Leaving date: ")
 
-    return Employee(first_name=first_name, middle_name=middle_name, last_name=last_name,
-                    username=username, password=password, start_date=start_date, leaving_date=leaving_date)
+    return Employee(
+        first_name=first_name,
+        middle_name=middle_name,
+        last_name=last_name,
+        username=username,
+        password=password,
+        start_date=start_date,
+        leaving_date=leaving_date,
+    )
 
 
 class Client:
-
     def __init__(self, hostname: str, port: int, id: str = "default_client"):
         self.hostname = hostname
         self.port = port
@@ -72,9 +78,13 @@ class Client:
                     case "register":
                         valid_choice = True
                         registration = register()
-                        registration_message = Protocol.build_request(Protocol.REGISTER, employee=registration)
+                        registration_message = Protocol.build_request(
+                            Protocol.REGISTER, employee=registration
+                        )
                         print(f"Registration request: {registration_message}")
-                        await Protocol.write_message(json.dumps(registration_message).encode("utf-8"), writer)
+                        await Protocol.write_message(
+                            json.dumps(registration_message).encode("utf-8"), writer
+                        )
                         server_response = await Protocol.read_message(reader)
                         server_response = json.loads(server_response.decode("utf-8"))
                         print(f"Server response: {server_response}")
@@ -87,8 +97,12 @@ class Client:
             # How to hide the text like it does when logging in on linux?
             password = input("Password: ")
 
-            login_message = Protocol.build_request(Protocol.LOGIN, username=username, password=password)
-            await Protocol.write_message(json.dumps(login_message).encode("utf-8"), writer)
+            login_message = Protocol.build_request(
+                Protocol.LOGIN, username=username, password=password
+            )
+            await Protocol.write_message(
+                json.dumps(login_message).encode("utf-8"), writer
+            )
             server_response = await Protocol.read_message(reader)
             server_response = json.loads(server_response.decode("utf-8"))
             print(f"Server response: {server_response}")
@@ -139,7 +153,7 @@ TEST_PACKET = {
     "direction": Protocol.REQUEST.value,
     "sender": "Cruthe93",
     "message": 0xDEADBEEF,
-    "testval": [x for x in range(10000)]
+    "testval": [x for x in range(10000)],
 }
 
 helpstring = "Commands: read, write, test, help, quit"

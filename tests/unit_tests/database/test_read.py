@@ -1,4 +1,3 @@
-
 def test_private_window():
     assert 1 == 1
 

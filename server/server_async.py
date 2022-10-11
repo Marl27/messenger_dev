@@ -17,8 +17,9 @@ from server.protocol import Protocol
 
 
 class Server:
-
-    def __init__(self, hostname: str, port: int, conn, cursor, logging_level: str = logging.WARN):
+    def __init__(
+        self, hostname: str, port: int, conn, cursor, logging_level: str = logging.WARN
+    ):
         self.connected_clients = []  # List for now, might need to change data structure
         self.hostname = hostname
         self.port = port
@@ -30,7 +31,9 @@ class Server:
 
     # Async def makes the function a 'coroutine'
     # basically a function that can be run using concurrency
-    async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    async def handle_client(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ):
         """
         Coroutine which handles incoming client sessions in parallel
 
@@ -40,7 +43,9 @@ class Server:
         """
         addr = writer.get_extra_info("peername")
         self.logger.info(f"Client {addr} connected.")
-        self.connected_clients.append(addr)  # Add this client to list of currently connected clients
+        self.connected_clients.append(
+            addr
+        )  # Add this client to list of currently connected clients
 
         # Private variable to keep in login loop unless successful
         __authenticated = False
@@ -58,8 +63,12 @@ class Server:
             # Passing bd_response in list to keep types passed to build_response the same
             # This should be refactored to pass a common type later on otherwise bugs
             #   will creep in
-            login_registration_response = await Protocol.build_response(request_type, [db_response])
-            login_registration_response = json.dumps(login_registration_response).encode("utf-8")
+            login_registration_response = await Protocol.build_response(
+                request_type, [db_response]
+            )
+            login_registration_response = json.dumps(
+                login_registration_response
+            ).encode("utf-8")
             await Protocol.write_message(login_registration_response, writer)
 
             if request_type == Protocol.LOGIN and db_response[0]:
@@ -76,10 +85,14 @@ class Server:
             response = {}
 
             data = await Protocol.read_message(reader)
-            message = json.loads(data.decode())  # Decoding message from bytestream to utf-8 encoded text to json (dict)
+            message = json.loads(
+                data.decode()
+            )  # Decoding message from bytestream to utf-8 encoded text to json (dict)
 
             request_type, db_response = self.parse_request(message)
-            self.logger.debug(f"request type: {request_type}, db_response: {type(db_response)}")
+            self.logger.debug(
+                f"request type: {request_type}, db_response: {type(db_response)}"
+            )
             # Ensures the rows returned from database contain the correct types for each position
             #db_response = Server.database_type_coerce(request_type, db_response)
             self.logger.debug(f"Received {message!r} from {addr!r}")
@@ -119,27 +132,36 @@ class Server:
 
             case "WRITE":
                 self.logger.debug(f"WRITE request to {request['sender']} : {request['payload']}")
+
                 return Protocol.WRITE, []
 
             case "LOGIN":
                 self.logger.debug(f"LOGIN request from username {request['username']}")
-                return Protocol.LOGIN, Server.login_db(conn=self.conn, cursor=self.cursor, request=request)
+                return Protocol.LOGIN, Server.login_db(
+                    conn=self.conn, cursor=self.cursor, request=request
+                )
 
             case "LOGOUT":
                 self.logger.debug(f"LOGOUT request from username {request['username']}")
                 return Protocol.LOGOUT, []
 
             case "REGISTER":
-                self.logger.debug(f"REGISTER request from username {request['username']}")
-                return Protocol.REGISTER, Server.register_db(Employee(conn=self.conn,
-                                                                      cursor=self.cursor,
-                                                                      username=request["username"],
-                                                                      password=request["password"],
-                                                                      first_name=request["first_name"],
-                                                                      middle_name=request["middle_name"],
-                                                                      last_name=request["last_name"],
-                                                                      start_date=request["start_date"],
-                                                                      leaving_date=request["leaving_date"]))
+                self.logger.debug(
+                    f"REGISTER request from username {request['username']}"
+                )
+                return Protocol.REGISTER, Server.register_db(
+                    Employee(
+                        conn=self.conn,
+                        cursor=self.cursor,
+                        username=request["username"],
+                        password=request["password"],
+                        first_name=request["first_name"],
+                        middle_name=request["middle_name"],
+                        last_name=request["last_name"],
+                        start_date=request["start_date"],
+                        leaving_date=request["leaving_date"],
+                    )
+                )
 
     async def main(self):
         """
@@ -148,9 +170,11 @@ class Server:
         """
         # asyncio makes it easy to start tcp servers using start_server
         # It's already both IPv4 and IPv6
-        server = await asyncio.start_server(self.handle_client, self.hostname, self.port)
+        server = await asyncio.start_server(
+            self.handle_client, self.hostname, self.port
+        )
 
-        addrs = ', '.join(str(sock.getsockname()) for sock in server.sockets)
+        addrs = ", ".join(str(sock.getsockname()) for sock in server.sockets)
         self.logger.info(f"Serving on {addrs}")
 
         async with server:
@@ -163,11 +187,14 @@ class Server:
 
     @staticmethod
     def login_db(conn, cursor, request):
-        return login_or_register.login(conn, cursor, user_name=request["username"], password=request["password"])
+        return login_or_register.login(
+            conn, cursor, user_name=request["username"], password=request["password"]
+        )
 
     @staticmethod
     def register_db(employee):
         return employee.register_employee()
+
 
     # # fix me for multiple reads
     # @staticmethod
@@ -187,3 +214,4 @@ class Server:
     #             )
     #             updated_tuples.append(new_tuple)
     #     return db_tuples
+
