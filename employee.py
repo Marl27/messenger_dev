@@ -1,16 +1,16 @@
+from user import User
 from database.login_or_register import register, login
 # from main import conn, cursor
 
 
-class Employee:
+class Employee(User):
     def __init__(self, conn, cursor, first_name, start_date, username, password, middle_name=None, last_name=None,
                  leaving_date=None):
+        super().__init__(username, password)
         self.conn = conn
         self.cursor = cursor
         self.first_name = first_name
         self.start_date = start_date
-        self.username = username
-        self.password = password
         self.middle_name = middle_name
         self.last_name = last_name
         self.leaving_date = leaving_date
