@@ -121,7 +121,7 @@ class Client:
                               receiver=receiver,
                               message=message,
                               is_broadcasted=False,
-                              group_name="",
+                              group_name=None,
                               is_stared=False)
         return messenger
 
