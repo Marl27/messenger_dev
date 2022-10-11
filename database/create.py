@@ -1,10 +1,7 @@
-from .database_connect import db_connect
+# from .database_connect import db_connect
 
 
-
-def create_table():
-    conn = db_connect()
-    cursor = conn.cursor()
+def create_table(conn, cursor):
     try:
         cursor.executescript("""
         CREATE TABLE IF NOT EXISTS employees (
@@ -27,7 +24,7 @@ def create_table():
             is_broadcasted BOOLEAN,
             group_name varchar,
             message TEXT NOT NULL,
-            stared BOOLEAN,
+            is_stared BOOLEAN,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """)
