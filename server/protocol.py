@@ -27,10 +27,12 @@ class Protocol(enum.Enum):
 
         """
         Static method to build a request packet.
+        :param messenger:
+        :param password:
+        :param username:
+        :param sender:
         :param request_type: header for function code (see protocol class)
-        :param to: username
         :param receiver: username
-        :param payload: string message
         :param employee: employee object with their personal data
         :return packet: json representation of packet
         """
