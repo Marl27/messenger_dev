@@ -30,9 +30,10 @@ class Client:
         self.port = port
         self.name = id
 
+
     async def tcp_echo_client(self, message: str):
         """
-        Skeleton of a client program
+        Skeleton of a client program - not needed any more
         Interestingly, asyncio open_connection defaults to IPv6
         :param message: String to send
         :return:lz
@@ -59,8 +60,8 @@ class Client:
         print(f"Connected to server on {self.hostname}:{self.port}")
 
         # Login
-        authenticated = False
-        while not authenticated:
+        __authenticated = True
+        while not __authenticated:
             print(f"Login or register: ")
 
             valid_choice = False
@@ -92,7 +93,7 @@ class Client:
             server_response = json.loads(server_response.decode("utf-8"))
             print(f"Server response: {server_response}")
             if server_response["authenticated"]:
-                authenticated = True
+                __authenticated = True
             else:
                 print("Incorrect username or password.")
 
