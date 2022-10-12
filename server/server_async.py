@@ -2,7 +2,6 @@ import asyncio
 import logging
 import sys
 import json
-from database import login_or_register
 from employee import Employee
 from messenger import Messenger
 from server.internal_client import Client
@@ -19,7 +18,29 @@ from user import User
 
 
 class Server:
+    """
+    Class which contains the core logic for the server.
 
+    Attributes
+    ----------
+    hostname : str
+        The IP address which the server is running from.
+
+    port : int
+        The port number which the server is bound to.
+
+    conn : sqlite3.Connection
+        Field for containing the database connection.
+
+    cursor: sqlite3.Cursor
+        Field for containing the database cursor object.
+
+    logger: logging.Logger
+        The server logging object. Default logging level set to logging.WARN
+
+    connected_clients
+        A list containing the connected client objects. Each object represents a unique client connected to the server.
+    """
     def __init__(self, hostname: str, port: int, conn, cursor, logging_level: str = logging.WARN):
         self.connected_clients = []  # List for now, might need to change data structure
         self.hostname = hostname
@@ -34,7 +55,7 @@ class Server:
     # basically a function that can be run using concurrency
     async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """
-        Coroutine which handles incoming client sessions in parallel
+        Coroutine which handles incoming client sessions. Contains the main logic for managing a client session until they disconnect
 
         :param reader: asyncio.StreamReader - wrapper for async reading to TCP sockets
         :param writer: asyncio.StreamWriter - wrapper for async writing to TCP sockets
@@ -89,7 +110,7 @@ class Server:
             request_type, db_response = self.parse_request(message)
             self.logger.debug(f"request type: {request_type}, db_response: {type(db_response)}")
             # Ensures the rows returned from database contain the correct types for each position
-            #db_response = Server.database_type_coerce(request_type, db_response)
+            # db_response = Server.database_type_coerce(request_type, db_response)
             self.logger.debug(f"Received {message!r} from {addr!r}")
 
             response = await Protocol.build_response(request_type, db_response)
@@ -110,12 +131,11 @@ class Server:
 
     def parse_request(self, request: dict):
         """
-        Method which parses client requests.
-        The requests will be in json format
-        NOTE this will need to be expanded to handle multiple requests in the one json file
+        Method to parse a client request packet based on code field in headers. Packets have a 'code' field which can take one of the following values:
+        Protocol.READ, Protocol.WRITE, Protocol.LOGIN, Protocol.LOGOUT, Protocol.REGISTER, Protocol.ERROR
 
         :param request: json format of request
-        :return (Protocol type Enum, [database response]): Returns a tuple with the function code and relevant data from database
+        :return: Returns a tuple with the function code and relevant data from database.
         """
         match request["code"]:
             case "READ":
@@ -177,20 +197,39 @@ class Server:
 
     @staticmethod
     def read_from_db(messenger):
-        # add to fetch_chat later:
+        """
+        Wrapper for reading from messenger object
+        :param messenger:
+        :return:
+        """
         return messenger.read_chat_from_messenger()
 
     @staticmethod
     def write_to_db(messenger):
+        """
+        Wrapper for writing to messenger object
+        :param messenger:
+        :return:
+        """
         return messenger.write_chat_to_messenger()
 
     @staticmethod
-    def login_db(user):
+    def login_db(user: User):
+        """
+        Wrapper for logging in using User object
+        :param user:
+        :return:
+        """
         # user can be of type user or employee
         return user.login()
 
     @staticmethod
-    def register_db(employee):
+    def register_db(employee: Employee):
+        """
+        Wrapper for registering a new employee user's details using Employee object
+        :param employee:
+        :return:
+        """
         return employee.register_employee()
 
     # # fix me for multiple reads
