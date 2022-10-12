@@ -1,7 +1,7 @@
 from .database_connect import logging
 from .config import _insert_private_chat
 
-# from database_connect import logging
+# from database_connect import db_connect, logging
 # from config import _insert_private_chat
 
 
@@ -98,6 +98,6 @@ def write_chat(
         )
 
 
-#
+# conn, cursor = db_connect("sqlite.db")
 # if __name__ == "__main__":
-#     write_chat(2, '2,1,3,4', 'group chat, multiple reciever test1', is_broadcasted=False, group_name=None, is_stared=False)
+#     write_chat(conn, cursor, 2, '2,1,3', 'group of 1,2,3 members', is_broadcasted=False, group_name=None, is_stared=False)

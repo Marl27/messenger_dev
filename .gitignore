@@ -4,5 +4,6 @@
 #virtual Environment
 .venv
 *.pyc
+
 #database
-#sqlite.db
+*.db

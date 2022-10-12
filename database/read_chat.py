@@ -15,6 +15,8 @@ def private_window(conn, cursor, employee_id, receiver_id):
         (
             employee_id,
             receiver_id,
+            employee_id,
+            receiver_id,
         ),
     )
     rows = cursor.fetchall()
@@ -43,7 +45,7 @@ def group_window(conn, cursor, employee_id, receiver_ids):
                 rows = cursor.fetchall()
                 if rows not in rows_of_messages:
                     rows_of_messages.append(rows)
-        # print("rows_of_messages - ", rows_of_messages)
+        print("rows_of_messages - ", *rows_of_messages)
         return rows_of_messages
 
 
@@ -59,4 +61,4 @@ def fetch_chat(conn, cursor, employee_id, receiver_id):
 
 # conn, cursor = db_connect("sqlite.db")
 # if __name__ == '__main__':
-#     fetch_chat(conn, cursor, 2, '3,2,4,1')
+#     fetch_chat(conn, cursor, 2, '2,1,3,4')
