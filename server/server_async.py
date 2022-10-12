@@ -8,6 +8,7 @@ from messenger import Messenger
 from server.internal_client import Client
 
 from server.protocol import Protocol
+from user import User
 
 
 # from main import HOSTNAME, PORT
@@ -138,7 +139,10 @@ class Server:
 
             case "LOGIN":
                 self.logger.debug(f"LOGIN request from username {request['username']}")
-                return Protocol.LOGIN, Server.login_db(conn=self.conn, cursor=self.cursor, request=request)
+                return Protocol.LOGIN, Server.login_db(user=User(conn=self.conn,
+                                                                 cursor=self.cursor,
+                                                                 username=request["username"],
+                                                                 password=request["password"]))
 
             case "LOGOUT":
                 self.logger.debug(f"LOGOUT request from username {request['username']}")
@@ -181,8 +185,9 @@ class Server:
         return messenger.write_chat_to_messenger()
 
     @staticmethod
-    def login_db(conn, cursor, request):
-        return login_or_register.login(conn, cursor, user_name=request["username"], password=request["password"])
+    def login_db(user):
+        # user can be of type user or employee
+        return user.login()
 
     @staticmethod
     def register_db(employee):
