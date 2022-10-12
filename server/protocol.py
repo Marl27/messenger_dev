@@ -6,6 +6,7 @@ class Protocol(enum.Enum):
     """
     This class defines our application-layer protocol for client-server communication
     """
+
     # Function codes
     LOGOUT = 0
     LOGIN = 1
@@ -25,6 +26,7 @@ class Protocol(enum.Enum):
                       employee=None,
                       messenger=None):
 
+
         """
         Static method to build a request packet.
         :param messenger:
@@ -40,32 +42,34 @@ class Protocol(enum.Enum):
         packet = {}  # Empty packet
         match request_type:
             case Protocol.LOGOUT:
-                packet = {"code": "LOGOUT",
-                          "username": username}
+                packet = {"code": "LOGOUT", "username": username}
 
             case Protocol.LOGIN:
-                packet = {"code": "LOGIN",
-                          "username": username,
-                          "password": password}
+                packet = {"code": "LOGIN", "username": username, "password": password}
 
             case Protocol.REGISTER:
-                packet = {"code": "REGISTER",
-                          "username": employee.username,
-                          "password": employee.password,
-                          "first_name": employee.first_name,
-                          "middle_name": employee.middle_name,
-                          "last_name": employee.last_name,
-                          "start_date": employee.start_date,
-                          "leaving_date": employee.leaving_date}
+                packet = {
+                    "code": "REGISTER",
+                    "username": employee.username,
+                    "password": employee.password,
+                    "first_name": employee.first_name,
+                    "middle_name": employee.middle_name,
+                    "last_name": employee.last_name,
+                    "start_date": employee.start_date,
+                    "leaving_date": employee.leaving_date,
+                }
 
             case Protocol.READ:
                 # 1 = charlie
                 # 2 = himalya
                 # 3 = Random
-                packet = {"code": "READ",
-                          "direction": Protocol.REQUEST.value,
-                          "receiver": receiver,
-                          "sender": sender}
+
+                packet = {
+                    "code": "READ",
+                    "direction": Protocol.REQUEST.value,
+                    "receiver": receiver,
+                    "sender": sender,
+                }
 
             case Protocol.WRITE:
                 packet = {"code": "WRITE",
@@ -77,10 +81,11 @@ class Protocol(enum.Enum):
                           "message": messenger.message,
                           "starred": messenger.is_stared
                           }
+
         return packet
 
     @staticmethod
-    async def build_response(response_type: 'Protocol', db_response: [(str)]) -> dict:
+    async def build_response(response_type: "Protocol", db_response: [(str)]) -> dict:
         """
         Static method to build a response packet. Takes a response code and builds appropriate packet
         using the response from the database.
@@ -92,29 +97,36 @@ class Protocol(enum.Enum):
         packet = {}  # Empty packet
         match response_type:
             case Protocol.LOGOUT:
-                packet = {"code": "LOGOUT",
-                          "direction": Protocol.RESPONSE.value,
-                          "message": "goodbye"}
+                packet = {
+                    "code": "LOGOUT",
+                    "direction": Protocol.RESPONSE.value,
+                    "message": "goodbye",
+                }
 
             case Protocol.LOGIN:
-                packet = {"code": "LOGIN",
-                          "direction": Protocol.RESPONSE.value,
-                          "authenticated": db_response[0][0],
-                          "user_id": db_response[0][1]}
+                packet = {
+                    "code": "LOGIN",
+                    "direction": Protocol.RESPONSE.value,
+                    "authenticated": db_response[0][0],
+                    "user_id": db_response[0][1],
+                }
 
             case Protocol.REGISTER:
-                packet = {"code": "REGISTER",
-                          "direction": Protocol.RESPONSE.value,
-                          }
+                packet = {
+                    "code": "REGISTER",
+                    "direction": Protocol.RESPONSE.value,
+                }
 
             case Protocol.READ:
                 # 1 = charlie
                 # 2 = himalya
                 # 3 = Random
 
-                packet = {"code": "READ",
-                          "direction": Protocol.RESPONSE.value,
-                          "messages": {}}
+                packet = {
+                    "code": "READ",
+                    "direction": Protocol.RESPONSE.value,
+                    "messages": {},
+                }
                 # loop here
 
                 if any(isinstance(el, list) for el in db_response):
@@ -176,13 +188,15 @@ class Protocol(enum.Enum):
         d = dict(def_dict)
 
         for k, v in enumerate(d):
-            d[k] = {"sender": message_chain[k][0],
-                    "receiver": message_chain[k][1],
-                    "is_broadcast": message_chain[k][2],
-                    "group_name": message_chain[k][3],
-                    "message": message_chain[k][4],
-                    "starred": message_chain[k][5],
-                    "created_at": message_chain[k][6]}
+            d[k] = {
+                "sender": message_chain[k][0],
+                "receiver": message_chain[k][1],
+                "is_broadcast": message_chain[k][2],
+                "group_name": message_chain[k][3],
+                "message": message_chain[k][4],
+                "starred": message_chain[k][5],
+                "created_at": message_chain[k][6],
+            }
         return d
 
 
