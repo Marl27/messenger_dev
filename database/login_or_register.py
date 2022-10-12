@@ -7,11 +7,17 @@ from .config import _login_query, _insert_register_employee
 
 def login(conn, cursor, user_name, password):
     # conn, cursor = db_connect()
-    cursor.execute(_login_query, (user_name, password,))
+    cursor.execute(
+        _login_query,
+        (
+            user_name,
+            password,
+        ),
+    )
     row = cursor.fetchone()
     if row is not None:
         employee_id, *other = row
-        logging.info('Login Successful')
+        logging.info("Login Successful")
         return True, employee_id
     else:
         return False, None
@@ -23,12 +29,32 @@ def login(conn, cursor, user_name, password):
 #         """
 
 
-def register(conn, cursor, first_name, start_date, username, password, middle_name, last_name, leaving_date):
+def register(
+    conn,
+    cursor,
+    first_name,
+    start_date,
+    username,
+    password,
+    middle_name,
+    last_name,
+    leaving_date,
+):
     # conn, cursor = db_connect()
     with conn:
-        cursor.execute(_insert_register_employee, (first_name, start_date, username, password, middle_name, last_name,
-                                                   leaving_date,))
-    logging.info('Employee Registered')
+        cursor.execute(
+            _insert_register_employee,
+            (
+                first_name,
+                start_date,
+                username,
+                password,
+                middle_name,
+                last_name,
+                leaving_date,
+            ),
+        )
+    logging.info("Employee Registered")
 
 
 # user_name = 'him.s'
