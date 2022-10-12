@@ -2,11 +2,12 @@ import asyncio
 import logging
 import sys
 import json
-from database import read_chat, login_or_register
 from employee import Employee
 from messenger import Messenger
+from server.internal_client import Client
 
 from server.protocol import Protocol
+from user import User
 
 
 # from main import HOSTNAME, PORT
@@ -17,9 +18,31 @@ from server.protocol import Protocol
 
 
 class Server:
-    def __init__(
-        self, hostname: str, port: int, conn, cursor, logging_level: str = logging.WARN
-    ):
+    """
+    Class which contains the core logic for the server.
+
+    Attributes
+    ----------
+    hostname : str
+        The IP address which the server is running from.
+
+    port : int
+        The port number which the server is bound to.
+
+    conn : sqlite3.Connection
+        Field for containing the database connection.
+
+    cursor: sqlite3.Cursor
+        Field for containing the database cursor object.
+
+    logger: logging.Logger
+        The server logging object. Default logging level set to logging.WARN
+
+    connected_clients
+        A list containing the connected client objects. Each object represents a unique client connected to the server.
+    """
+    def __init__(self, hostname: str, port: int, conn, cursor, logging_level: str = logging.WARN):
+
         self.connected_clients = []  # List for now, might need to change data structure
         self.hostname = hostname
         self.port = port
@@ -35,7 +58,7 @@ class Server:
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ):
         """
-        Coroutine which handles incoming client sessions in parallel
+        Coroutine which handles incoming client sessions. Contains the main logic for managing a client session until they disconnect
 
         :param reader: asyncio.StreamReader - wrapper for async reading to TCP sockets
         :param writer: asyncio.StreamWriter - wrapper for async writing to TCP sockets
@@ -43,9 +66,9 @@ class Server:
         """
         addr = writer.get_extra_info("peername")
         self.logger.info(f"Client {addr} connected.")
-        self.connected_clients.append(
-            addr
-        )  # Add this client to list of currently connected clients
+        client = Client(*addr)
+        self.connected_clients.append(client)  # Add this client to list of currently connected clients
+
 
         # Private variable to keep in login loop unless successful
         __authenticated = False
@@ -54,11 +77,15 @@ class Server:
             # to run coroutines you need to call them using the 'await' keyword
             login_register_request = await Protocol.read_message(reader)
             login_registration_data = json.loads(login_register_request.decode())
-
+            client.username = login_registration_data["username"]
+            self.logger.debug(f"Received : {login_registration_data}")
             # here db_response has type (bool, employee_id)
             # if the login is a failure employee_id will be None
-            # We know this is a login request so ignore the first return val
             request_type, db_response = self.parse_request(login_registration_data)
+
+            if db_response[1]:
+                self.logger.info(f"Authentication success from {client.username} on {client.host, client.port}")
+                client.uid = db_response[1]
 
             # Passing bd_response in list to keep types passed to build_response the same
             # This should be refactored to pass a common type later on otherwise bugs
@@ -74,6 +101,7 @@ class Server:
             if request_type == Protocol.LOGIN and db_response[0]:
                 # i.e. if the database returns a successful authentication
                 __authenticated = True
+        self.logger.debug(f"Connected clients: {self.connected_clients!r}")
 
         # Post login main loop
         logout = False
@@ -102,7 +130,7 @@ class Server:
 
             if response["code"] == "LOGOUT":
                 self.logger.info(f"Client {addr!r} disconnected.")
-                self.connected_clients.remove(addr)
+                self.connected_clients.remove(client)
                 self.logger.debug(f"Connected clients: {self.connected_clients!r}")
                 logout = True
 
@@ -115,12 +143,11 @@ class Server:
 
     def parse_request(self, request: dict):
         """
-        Method which parses client requests.
-        The requests will be in json format
-        NOTE this will need to be expanded to handle multiple requests in the one json file
+        Method to parse a client request packet based on code field in headers. Packets have a 'code' field which can take one of the following values:
+        Protocol.READ, Protocol.WRITE, Protocol.LOGIN, Protocol.LOGOUT, Protocol.REGISTER, Protocol.ERROR
 
         :param request: json format of request
-        :return (Protocol type Enum, [database response]): Returns a tuple with the function code and relevant data from database
+        :return: Returns a tuple with the function code and relevant data from database.
         """
         match request["code"]:
             case "READ":
@@ -135,17 +162,23 @@ class Server:
                 )
 
             case "WRITE":
-                self.logger.debug(
-                    f"WRITE request to {request['sender']} : {request['payload']}"
-                )
-
-                return Protocol.WRITE, []
+                self.logger.debug(f"WRITE request from {request['sender']} to {request['receiver']}"
+                                  f" : {request['message']}")
+                return Protocol.WRITE, Server.write_to_db(Messenger(conn=self.conn,
+                                                                    cursor=self.cursor,
+                                                                    sender=request["sender"],
+                                                                    receiver=request["receiver"],
+                                                                    is_broadcasted=request["is_broadcast"],
+                                                                    group_name=request["group_name"],
+                                                                    message=request["message"],
+                                                                    is_stared=request["starred"]))
 
             case "LOGIN":
                 self.logger.debug(f"LOGIN request from username {request['username']}")
-                return Protocol.LOGIN, Server.login_db(
-                    conn=self.conn, cursor=self.cursor, request=request
-                )
+                return Protocol.LOGIN, Server.login_db(user=User(conn=self.conn,
+                                                                 cursor=self.cursor,
+                                                                 username=request["username"],
+                                                                 password=request["password"]))
 
             case "LOGOUT":
                 self.logger.debug(f"LOGOUT request from username {request['username']}")
@@ -188,17 +221,39 @@ class Server:
 
     @staticmethod
     def read_from_db(messenger):
-        # add to fetch_chat later:
+        """
+        Wrapper for reading from messenger object
+        :param messenger:
+        :return:
+        """
         return messenger.read_chat_from_messenger()
 
     @staticmethod
-    def login_db(conn, cursor, request):
-        return login_or_register.login(
-            conn, cursor, user_name=request["username"], password=request["password"]
-        )
+    def write_to_db(messenger):
+        """
+        Wrapper for writing to messenger object
+        :param messenger:
+        :return:
+        """
+        return messenger.write_chat_to_messenger()
 
     @staticmethod
-    def register_db(employee):
+    def login_db(user: User):
+        """
+        Wrapper for logging in using User object
+        :param user:
+        :return:
+        """
+        # user can be of type user or employee
+        return user.login()
+
+    @staticmethod
+    def register_db(employee: Employee):
+        """
+        Wrapper for registering a new employee user's details using Employee object
+        :param employee:
+        :return:
+        """
         return employee.register_employee()
 
     # # fix me for multiple reads
