@@ -4,10 +4,7 @@
 # SELECT statements
 _select_private_window = "SELECT * FROM messenger m WHERE sender IN (?,?) AND receiver IN (?,?)"
 _select_group_window = "SELECT * FROM messenger m WHERE receiver = ?"
-_select_receiver_where_more_than_1 = """
-                        SELECT receiver FROM messenger m
-                        WHERE LENGTH(receiver) > 1
-                        """
+_select_receiver_where_more_than_1 = "SELECT receiver FROM messenger m WHERE LENGTH(receiver) > 1"
 
 
 # --------------------------------------------------------------------------
@@ -17,10 +14,9 @@ _select_receiver_where_more_than_1 = """
 _login_query = "SELECT employee_id FROM employees e WHERE username = ? AND password = ?"
 
 # INSERT statements
-_insert_register_employee = """
-        INSERT INTO employees ( first_name, start_date, username, password, middle_name, last_name, leaving_date)
-        VALUES(?,?,?,?,?,?,?)
-        """
+_insert_register_employee = """ 
+INSERT INTO employees (first_name, start_date, username, password, middle_name, last_name, leaving_date) 
+VALUES(?,?,?,?,?,?,?)"""
 
 # UPDATE statements
 
@@ -29,9 +25,9 @@ _insert_register_employee = """
 # --------------------------------------------------------------------------
 # INSERT statements for private and group chat
 _insert_private_chat = """
-        INSERT INTO messenger (sender, receiver, message, is_broadcasted, group_name, is_stared) 
-        VALUES(?,?,?,?,?,?)
-        """
+INSERT INTO messenger (sender, receiver, message, is_broadcasted, group_name, is_stared) 
+VALUES(?,?,?,?,?,?)"""
+
 #
 # --------------------------------------------------------------------------
 # create.py

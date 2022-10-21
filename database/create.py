@@ -1,4 +1,3 @@
-# from .database_connect import db_connect
 from .config import _create_table_statement
 
 
