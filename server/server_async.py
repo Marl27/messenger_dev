@@ -76,7 +76,7 @@ class Server:
             # Login or register
             # to run coroutines you need to call them using the 'await' keyword
             login_register_request = await Protocol.read_message(reader)
-            login_registration_data = json.loads(login_register_request.decode())
+            login_registration_data = json.loads(login_register_request)
             client.username = login_registration_data["username"]
             self.logger.debug(f"Received : {login_registration_data}")
             # here db_response has type (bool, employee_id)
@@ -95,7 +95,7 @@ class Server:
             )
             login_registration_response = json.dumps(
                 login_registration_response
-            ).encode("utf-8")
+            )
             await Protocol.write_message(login_registration_response, writer)
 
             if request_type == Protocol.LOGIN and db_response[0]:
@@ -114,7 +114,7 @@ class Server:
 
             data = await Protocol.read_message(reader)
             message = json.loads(
-                data.decode()
+                data
             )  # Decoding message from bytestream to utf-8 encoded text to json (dict)
 
             request_type, db_response = self.parse_request(message)
@@ -134,7 +134,7 @@ class Server:
                 self.logger.debug(f"Connected clients: {self.connected_clients!r}")
                 logout = True
 
-            response = json.dumps(response).encode("utf-8")
+            response = json.dumps(response)
             await Protocol.write_message(response, writer)
 
         # This method closes the stream AND the underlying socket

@@ -1,6 +1,7 @@
 import asyncio
 import json
 import sys
+import getpass
 from server.protocol import Protocol
 from employee import Employee
 import logging
@@ -64,10 +65,10 @@ class Client:
 
                         registration_message = Protocol.build_request(Protocol.REGISTER, employee=registration)
                         self.logger.debug(f"Registration request: {registration_message}")
-                        await Protocol.write_message(json.dumps(registration_message).encode("utf-8"), writer)
+                        await Protocol.write_message(json.dumps(registration_message), writer)
 
                         server_response = await Protocol.read_message(reader)
-                        server_response = json.loads(server_response.decode("utf-8"))
+                        server_response = json.loads(server_response)
                         self.logger.debug(f"Server response: {server_response}")
 
                     case "login":
@@ -75,17 +76,16 @@ class Client:
 
             print(f"Please enter login credentials")
             username = input("Username: ")
-            # How to hide the text like it does when logging in on linux?
-            password = input("Password: ")
+            password = getpass.getpass()
 
             login_message = Protocol.build_request(
                 Protocol.LOGIN, username=username, password=password
             )
             await Protocol.write_message(
-                json.dumps(login_message).encode("utf-8"), writer
+                json.dumps(login_message), writer
             )
             server_response = await Protocol.read_message(reader)
-            server_response = json.loads(server_response.decode("utf-8"))
+            server_response = json.loads(server_response)
             self.logger.debug(f"Server response: {server_response}")
             if server_response["authenticated"]:
                 __authenticated = True
@@ -121,9 +121,9 @@ class Client:
                 message = Protocol.build_request(Protocol.LOGOUT, username=username)
                 logout = True
 
-            await Protocol.write_message(json.dumps(message).encode("utf-8"), writer)
+            await Protocol.write_message(json.dumps(message), writer)
             server_response = await Protocol.read_message(reader)
-            server_response = json.loads(server_response.decode("utf-8"))
+            server_response = json.loads(server_response)
             self.logger.debug(f"Server response: {server_response}")
 
         writer.close()

@@ -141,9 +141,10 @@ class Protocol(enum.Enum):
                     packet["messages"] |= Protocol.extract_messages(db_response)
 
             case Protocol.WRITE:
-                packet = {"code": "WRITE",
-                          "direction": Protocol.RESPONSE.value,
-                          }
+                packet = {
+                    "code": "WRITE",
+                    "direction": Protocol.RESPONSE.value,
+                }
         return packet
 
     @staticmethod
@@ -155,8 +156,8 @@ class Protocol(enum.Enum):
         :param writer: asyncio.StreamWriter - The stream writer object
         :return:
         """
-        writer.write(b"%d\n" % len(octets))
-        writer.write(octets)
+        writer.write(f"{len(octets)}\n".encode("utf-8"))
+        writer.write(octets.encode("utf-8"))
         # Need to use write with drain as it might be queued in a write buffer
         # if it cannot be sent immediately
         await writer.drain()
@@ -168,17 +169,22 @@ class Protocol(enum.Enum):
         then reads the exact number of bytes.
 
         :param reader: asyncio.StreamReader - the reader object
-        :return future:
+        :return :
         """
         prefix = await reader.readline()
         msg_len = 0
         if prefix:
             msg_len = int(prefix)
-        return await reader.readexactly(msg_len)
+        msg = await reader.readexactly(msg_len)
+        return msg.decode("utf-8")
 
-    # Takes in a single message chain of type list of tuples and builds the response dictionary
     @staticmethod
     def extract_messages(message_chain):
+        """
+        Takes in a single message chain of type list of tuples and builds the response dictionary
+        :param message_chain: list of tuples, each represents a single message and its metadata
+        :return d: dictionary
+        """
         num_messages = len(message_chain)
         d = {}
         def_dict = defaultdict(int)
