@@ -26,7 +26,7 @@ class Messenger:
         self.is_stared = is_stared
 
     def write_chat_to_messenger(self):
-        if self.message != "":
+        if not self.message.strip():
             result = write_chat(
                 self.conn,
                 self.cursor,
