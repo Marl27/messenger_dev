@@ -43,8 +43,7 @@ def write_group_chat(
     is_stared=False,
 ):
     if str(sender_id) not in receiver_id:
-        receiver_id = str(sender_id) + "," + receiver_id
-    # conn, cursor = db_connect()
+        receiver_id = "{},{}".format(str(sender_id), receiver_id)
     with conn:
         cursor.execute(
             _insert_private_chat,

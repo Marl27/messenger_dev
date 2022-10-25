@@ -18,22 +18,23 @@ class Protocol(enum.Enum):
     RESPONSE = 100
 
     @staticmethod
-    def build_request(
-        request_type: "Protocol",
-        sender: str = "",
-        receiver: str = "",
-        username="",
-        password="",
-        payload: str = "",
-        employee=None,
-    ):
+    def build_request(request_type: 'Protocol',
+                      sender: str = "",
+                      receiver: str = "",
+                      username="",
+                      password="",
+                      employee=None,
+                      messenger=None):
+
 
         """
         Static method to build a request packet.
+        :param messenger:
+        :param password:
+        :param username:
+        :param sender:
         :param request_type: header for function code (see protocol class)
-        :param to: username
         :param receiver: username
-        :param payload: string message
         :param employee: employee object with their personal data
         :return packet: json representation of packet
         """
@@ -71,12 +72,16 @@ class Protocol(enum.Enum):
                 }
 
             case Protocol.WRITE:
-                packet = {
-                    "code": "WRITE",
-                    "direction": Protocol.REQUEST.value,
-                    "sender": sender,
-                    "payload": payload,
-                }
+                packet = {"code": "WRITE",
+                          "direction": Protocol.REQUEST.value,
+                          "sender": messenger.sender,
+                          "receiver": messenger.receiver,
+                          "is_broadcast": messenger.is_broadcasted,
+                          "group_name": messenger.group_name,
+                          "message": messenger.message,
+                          "starred": messenger.is_stared
+                          }
+
         return packet
 
     @staticmethod
@@ -136,10 +141,9 @@ class Protocol(enum.Enum):
                     packet["messages"] |= Protocol.extract_messages(db_response)
 
             case Protocol.WRITE:
-                packet = {
-                    "code": "WRITE",
-                    "direction": Protocol.REQUEST.value,
-                }
+                packet = {"code": "WRITE",
+                          "direction": Protocol.RESPONSE.value,
+                          }
         return packet
 
     @staticmethod
