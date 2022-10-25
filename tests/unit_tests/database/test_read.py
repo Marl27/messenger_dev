@@ -5,7 +5,7 @@ sys.path.append(".")
 from database.read_chat import fetch_chat, private_window, group_window
 from tests.database_config import db_connect_for_testing
 
-print("******db_connect*****", db_connect_for_testing)
+# print("******db_connect*****", db_connect_for_testing)
 
 
 def test_private_window(db_connect_for_testing):
