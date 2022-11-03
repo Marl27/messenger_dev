@@ -1,0 +1,9 @@
+#IDE specific
+.idea
+
+#virtual Environment
+.venv
+*.pyc
+
+#database
+*.db
