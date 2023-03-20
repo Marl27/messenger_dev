@@ -8,6 +8,7 @@ from server.internal_client import Client
 
 from server.protocol import Protocol
 from user import User
+from database.read_chat import fetch_chats_for_chats_page
 
 
 # from main import HOSTNAME, PORT
@@ -151,6 +152,7 @@ class Server:
         """
         match request["code"]:
             case "READ":
+                print("request - ", request)
                 self.logger.debug(f"READ request from {request['receiver']}")
                 return Protocol.READ, Server.read_from_db(
                     Messenger(
@@ -159,6 +161,15 @@ class Server:
                         sender=request["sender"],
                         receiver=request["receiver"],
                     )
+                )
+
+            case "READ_CHATS":
+                print("request READ_CHATS - ", request)
+                self.logger.debug(f"READ request from {request['sender']}")
+                return Protocol.READ_CHATS, Server.read_chats_from_db(
+                    self.conn,
+                    self.cursor,
+                    request["sender"],
                 )
 
             case "WRITE":
@@ -227,6 +238,15 @@ class Server:
         :return:
         """
         return messenger.read_chat_from_messenger()
+
+    @staticmethod
+    def read_chats_from_db(conn, cursor, employee_id):
+        """
+        Wrapper for reading from messenger object
+        :param messenger:
+        :return:
+        """
+        return fetch_chats_for_chats_page(conn, cursor, employee_id)
 
     @staticmethod
     def write_to_db(messenger):

@@ -5,7 +5,26 @@
 _select_private_window = "SELECT * FROM messenger m WHERE sender IN (?,?) AND receiver IN (?,?)"
 _select_group_window = "SELECT * FROM messenger m WHERE receiver = ?"
 _select_receiver_where_more_than_1 = "SELECT receiver FROM messenger m WHERE LENGTH(receiver) > 1"
-
+_select_all_chats = """
+WITH CHAT_WITH_CTE AS(
+SELECT e.first_name, m.sender, m.receiver, m.is_broadcasted, m.group_name, m.message, m.is_stared, m.created_at
+, CASE WHEN LENGTH(m.group_name) > 0 THEN m.group_name
+    ELSE (SELECT group_concat(e.first_name, ',') 
+    FROM employees e
+    WHERE ',' || m.receiver || ',' LIKE '%,' || e.employee_id || ',%')
+    END AS CHAT_WITH
+FROM messenger m
+JOIN employees e on e.employee_id = m.sender  
+WHERE sender = ? --UPDATE variable
+ORDER BY m.created_at DESC
+), GROUPED_BY_RECEIVERS AS(
+SELECT * 
+FROM CHAT_WITH_CTE
+GROUP BY receiver 
+) SELECT * 
+FROM GROUPED_BY_RECEIVERS
+ORDER BY  created_at DESC
+"""
 
 # --------------------------------------------------------------------------
 # login_or_register.py

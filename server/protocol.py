@@ -12,6 +12,7 @@ class Protocol(enum.Enum):
     LOGIN = 1
     REGISTER = 2
     READ = 3
+    READ_CHATS = 33
     WRITE = 4
     LIST = 5
     REQUEST = 99
@@ -139,6 +140,14 @@ class Protocol(enum.Enum):
                     packet["messages"] |= Protocol.extract_messages(dlist)
                 else:
                     packet["messages"] |= Protocol.extract_messages(db_response)
+
+            case Protocol.READ_CHATS:
+                # 1 = charlie
+                # 2 = himalya
+                # 3 = Random
+
+                packet = {"code": "READ_CHATS", "direction": Protocol.RESPONSE.value, "messages": db_response}
+                # loop here
 
             case Protocol.WRITE:
                 packet = {"code": "WRITE",

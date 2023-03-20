@@ -1,4 +1,4 @@
-from database.read_chat import fetch_chat
+from database.read_chat import fetch_chat, fetch_chats_for_chats_page
 from database.write_chat import write_chat
 
 # from main import conn, cursor
@@ -10,7 +10,7 @@ class Messenger:
         conn,
         cursor,
         sender,
-        receiver,
+        receiver="",
         message="",
         is_broadcasted=False,
         group_name=None,
@@ -42,3 +42,6 @@ class Messenger:
 
     def read_chat_from_messenger(self):
         return fetch_chat(self.conn, self.cursor, self.sender, self.receiver)
+
+    def read_chats_from_messenger(self):
+        return fetch_chats_for_chats_page(self.conn, self.cursor, self.sender)

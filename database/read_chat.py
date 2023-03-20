@@ -3,6 +3,7 @@ from .config import (
     _select_private_window,
     _select_receiver_where_more_than_1,
     _select_group_window,
+    _select_all_chats,
 )
 
 # from database_connect import db_connect, logging
@@ -57,6 +58,13 @@ def fetch_chat(conn, cursor, employee_id, receiver_id):
     else:
         logging.info("private window")
         return private_window(conn, cursor, employee_id, receiver[0])
+
+
+def fetch_chats_for_chats_page(conn, cursor, employee_id):
+    cursor.execute(_select_all_chats,
+                   (employee_id,),)
+    rows = cursor.fetchall()
+    return rows
 
 
 # conn, cursor = db_connect("sqlite.db")
